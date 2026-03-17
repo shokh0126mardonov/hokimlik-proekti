@@ -31,11 +31,11 @@ class User(AbstractUser):
     )
 
     telegram_id = models.BigIntegerField(null=True, blank=True, unique=True)
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True,verbose_name="Faolligi")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.username
+        return f"{self.pk} {self.username}"
     
     @property
     def super_admin(self):
