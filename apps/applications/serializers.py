@@ -1,5 +1,8 @@
+import os
+
 from rest_framework import serializers
 
+from apps.accounts.models import User
 from .models import Application,Attachment,MahallaReport
 
 class AplicationSerializers(serializers.ModelSerializer):
@@ -14,23 +17,38 @@ class SendMahallaSerialisers(serializers.Serializer):
 
 
 class AttachmentSerializers(serializers.Serializer):
-
     report = serializers.PrimaryKeyRelatedField(
-        queryset = MahallaReport.objects.all(),
+        queryset=MahallaReport.objects.all()
     )
-
     file = serializers.FileField()
 
-    def create(self, validated_data,**kwargs):
-        print(kwargs.get('uploaded_by'))
+    def create(self, validated_data):
+        file_obj = validated_data['file']
+        ext = os.path.splitext(file_obj.name)[1].lower()
+
+
         return Attachment.objects.create(
-                report = validated_data['report'],
-                application = kwargs.get('application'),
-                file_size = 3,
-                uploaded_by = kwargs.get('uploaded_by')
+            report=validated_data['report'],
+            application=validated_data.get('application'),
+            uploaded_by=validated_data.get('uploaded_by'),
+            file_type = ext ,
+            file=file_obj,
+            file_size=file_obj.size,  # 🔥 MUHIM
         )
 
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['username','full_name','role']
+
 class AttachmentResponseSerializers(serializers.ModelSerializer):
+    uploaded_by = UserSerializer(read_only = True)
     class Meta:
         model = Attachment
-        fields = '__all__'
+        fields = [
+            'report','application','file','file_type','file_size','uploaded_by','created_at'
+        ]
+    
+
+

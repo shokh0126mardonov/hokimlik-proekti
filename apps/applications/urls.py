@@ -12,6 +12,7 @@ urlpatterns = [
     path("applications/<int:pk>/close/",AplicationStatus.as_view({"post":"close"})),
     path("applications/<int:pk>/reopen/",AplicationStatus.as_view({"post":"reopen"})),
 
+    #File yuklash
     path("applications/<int:pk>/attachments/",AttachmentApiView.as_view())
 
 ]

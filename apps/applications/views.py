@@ -9,12 +9,13 @@ from rest_framework.views import APIView
 from rest_framework.decorators import action
 from rest_framework.request import Request
 from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.generics import ListCreateAPIView
+from rest_framework import status
 
 
 
-
-from .models import Application
-from .serializers import AplicationSerializers,AttachmentSerializers
+from .models import Application,Attachment
+from .serializers import AplicationSerializers,AttachmentSerializers,AttachmentResponseSerializers
 from .permission import AplicationPermission,AplicationCreatePermission,AplicationsSendMahallaPermissions,AttachmentPermissions
 
 class ApplicationViewSets(ModelViewSet):
@@ -123,21 +124,32 @@ class AplicationStatus(ModelViewSet):
     
 
 
-class AttachmentApiView(APIView):
+class AttachmentApiView(ListCreateAPIView):
+    queryset = Attachment.objects.all()
     permission_classes = [IsAuthenticated,AttachmentPermissions]
     authentication_classes = [JWTAuthentication]
     parser_classes = [MultiPartParser, FormParser]
 
-    def post(self,request:Request,pk)->Response:
-        aplication = get_object_or_404(Application,pk=pk)
-        
-        serializers = AttachmentSerializers(data = request.data)
-        serializers.is_valid(raise_exception=True)
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return AttachmentSerializers
+        return AttachmentResponseSerializers
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
 
-        serializers.save(
-            application = aplication,
-            uploaded_by = request.user
+        serializer.is_valid(raise_exception=True)
+
+        self.perform_create(serializer)
+
+        instance = serializer.instance
+
+        response_serializer = AttachmentResponseSerializers(instance)
+
+        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+    
+    def perform_create(self, serializer):
+        return serializer.save(
+            uploaded_by = self.request.user
         )
-        return Response({"status":"ok"})
-    
-    
+            
