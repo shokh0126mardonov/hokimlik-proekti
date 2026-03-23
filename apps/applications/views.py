@@ -13,12 +13,12 @@ from rest_framework.generics import ListCreateAPIView
 from rest_framework import status
 
 
-
+from apps.audit.views import AuditMixin
 from .models import Application,Attachment,MahallaReport
 from .serializers import AplicationSerializers,AttachmentSerializers,AttachmentResponseSerializers,MahallaRepostSerializers
 from .permission import AplicationPermission,AplicationCreatePermission,AplicationsSendMahallaPermissions,AttachmentPermissions
 
-class ApplicationViewSets(ModelViewSet):
+class ApplicationViewSets(AuditMixin,ModelViewSet):
     queryset = Application.objects.all()
     serializer_class = AplicationSerializers
     authentication_classes = [JWTAuthentication]
@@ -68,7 +68,7 @@ class ApplicationViewSets(ModelViewSet):
         return serializer.save(created_by = self.request.user)
 
 
-class SendToMahallaAPIView(APIView):
+class SendToMahallaAPIView(AuditMixin,APIView):
     permission_classes = [IsAuthenticated, AplicationsSendMahallaPermissions]
 
     def post(self, request, pk):
@@ -84,7 +84,7 @@ class SendToMahallaAPIView(APIView):
         return Response({'status': 'ok'})
     
 
-class AplicationStatus(ModelViewSet):
+class AplicationStatus(AuditMixin,ModelViewSet):
     queryset = Application.objects.all()
     permission_classes = [IsAuthenticated,AplicationsSendMahallaPermissions]
     authentication_classes = [JWTAuthentication]
@@ -124,7 +124,7 @@ class AplicationStatus(ModelViewSet):
     
 
 
-class AttachmentApiView(ListCreateAPIView):
+class AttachmentApiView(AuditMixin,ListCreateAPIView):
     queryset = Attachment.objects.all()
     permission_classes = [IsAuthenticated,AttachmentPermissions]
     authentication_classes = [JWTAuthentication]
@@ -136,6 +136,10 @@ class AttachmentApiView(ListCreateAPIView):
         return AttachmentResponseSerializers
     
     def create(self, request, *args, **kwargs):
+
+        from ipware import get_client_ip
+        client_ip, is_routable = get_client_ip(request)
+
         serializer = self.get_serializer(data=request.data)
 
         serializer.is_valid(raise_exception=True)
@@ -154,15 +158,16 @@ class AttachmentApiView(ListCreateAPIView):
         )
             
 
-class ExportFileViewSets(ModelViewSet):
+class ExportFileViewSets(AuditMixin,ModelViewSet):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated,AplicationsSendMahallaPermissions]
     queryset = Attachment.objects.all()
     serializer_class = AttachmentResponseSerializers
 
 
-class MahallaRepost(ModelViewSet):
+class MahallaRepost(AuditMixin,ModelViewSet):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated,AplicationsSendMahallaPermissions]
     queryset = MahallaReport.objects.all()
     serializer_class = MahallaRepostSerializers
+

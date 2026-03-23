@@ -12,7 +12,7 @@ class AuditLog(models.Model):
 
     entity_type = models.CharField(max_length=50)
 
-    entity_id = models.UUIDField()
+    entity_id = models.CharField()
 
     action = models.CharField(max_length=50)
 
@@ -26,3 +26,6 @@ class AuditLog(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.pk}"

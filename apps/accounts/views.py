@@ -3,12 +3,13 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
+from apps.audit.views import AuditMixin
 from .models import User
 from .permissions import Is_SuperAdmin
 from .serializers import UserSerializer,RegisterSerializers
 
 
-class UserCrudVievSet(ModelViewSet):
+class UserCrudVievSet(AuditMixin,ModelViewSet):
     authentication_classes = [JWTAuthentication]
     queryset = User.objects.filter(is_active = True).all()
     permission_classes = [IsAuthenticated,Is_SuperAdmin]
