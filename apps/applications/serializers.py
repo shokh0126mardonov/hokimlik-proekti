@@ -51,4 +51,7 @@ class AttachmentResponseSerializers(serializers.ModelSerializer):
         ]
     
 
-
+class MahallaRepostSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = MahallaReport
+        fields = '__all__'

@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import ApplicationViewSets,SendToMahallaAPIView,AplicationStatus,AttachmentApiView
+from .views import ApplicationViewSets,SendToMahallaAPIView,AplicationStatus,AttachmentApiView,ExportFileViewSets,MahallaRepost
 
 urlpatterns = [
     path("applications/",ApplicationViewSets.as_view({"get":"list","post":"create"})),
@@ -13,6 +13,11 @@ urlpatterns = [
     path("applications/<int:pk>/reopen/",AplicationStatus.as_view({"post":"reopen"})),
 
     #File yuklash
-    path("applications/<int:pk>/attachments/",AttachmentApiView.as_view())
+    path("applications/<int:pk>/attachments/",AttachmentApiView.as_view()),
+    path("reports/export/", ExportFileViewSets.as_view({"get":"list"}), name=""),
+    path("reports/export/<int:pk>/", ExportFileViewSets.as_view({"get":"retrieve"}), name=""),
 
+
+    # Hisobotlar ro'yxati
+    path("mahalla-reports/", MahallaRepost.as_view({"get":"list"}), name="")
 ]

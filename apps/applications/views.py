@@ -14,8 +14,8 @@ from rest_framework import status
 
 
 
-from .models import Application,Attachment
-from .serializers import AplicationSerializers,AttachmentSerializers,AttachmentResponseSerializers
+from .models import Application,Attachment,MahallaReport
+from .serializers import AplicationSerializers,AttachmentSerializers,AttachmentResponseSerializers,MahallaRepostSerializers
 from .permission import AplicationPermission,AplicationCreatePermission,AplicationsSendMahallaPermissions,AttachmentPermissions
 
 class ApplicationViewSets(ModelViewSet):
@@ -153,3 +153,16 @@ class AttachmentApiView(ListCreateAPIView):
             uploaded_by = self.request.user
         )
             
+
+class ExportFileViewSets(ModelViewSet):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated,AplicationsSendMahallaPermissions]
+    queryset = Attachment.objects.all()
+    serializer_class = AttachmentResponseSerializers
+
+
+class MahallaRepost(ModelViewSet):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated,AplicationsSendMahallaPermissions]
+    queryset = MahallaReport.objects.all()
+    serializer_class = MahallaRepostSerializers
