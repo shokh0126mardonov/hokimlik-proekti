@@ -16,7 +16,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path,include
-from rest_framework import permissions
+from django.contrib import admin
+from django.conf import settings
+from django.conf.urls.static import static
 
 from django.urls import path
 from drf_spectacular.views import (
@@ -48,3 +50,6 @@ urlpatterns = [
         name="redoc",
     ),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

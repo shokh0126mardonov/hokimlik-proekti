@@ -1,5 +1,5 @@
 from telegram import Update
-from telegram.ext import Application,CommandHandler,ContextTypes
+from telegram.ext import Application,CommandHandler
 from decouple import config
 
 from handlers import start_bot,murojat_bot,barcha_command_bot

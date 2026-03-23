@@ -26,3 +26,11 @@ class AplicationsSendMahallaPermissions(BasePermission):
         return request.user and (
             request.user.super_admin or  request.user.hokim
         )
+    
+class AttachmentPermissions(BasePermission):
+    message = 'siz attachment qila olmaysiz!'
+
+    def has_permission(self, request, view):
+        return request.user and (
+            request.user.super_admin or  request.user.service_staff
+        )

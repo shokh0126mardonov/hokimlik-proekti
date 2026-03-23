@@ -122,6 +122,9 @@ class MahallaReport(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return f"{self.oqsoqol.username}"
+
 class Attachment(models.Model):
 
     report = models.ForeignKey(
@@ -153,3 +156,6 @@ class Attachment(models.Model):
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.pk} {self.created_at.strftime("%Y-%m-%d - %H-%M")}"

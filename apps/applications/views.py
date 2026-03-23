@@ -1,13 +1,21 @@
+from django.utils import timezone
 from django.shortcuts import get_object_or_404
 
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.views import APIView
+from rest_framework.decorators import action
+from rest_framework.request import Request
+from rest_framework.parsers import MultiPartParser, FormParser
+
+
+
 
 from .models import Application
-from .serializers import AplicationSerializers,SendMahallaSerialisers
-from .permission import AplicationPermission,AplicationCreatePermission,AplicationsSendMahallaPermissions
+from .serializers import AplicationSerializers,AttachmentSerializers
+from .permission import AplicationPermission,AplicationCreatePermission,AplicationsSendMahallaPermissions,AttachmentPermissions
 
 class ApplicationViewSets(ModelViewSet):
     queryset = Application.objects.all()
@@ -53,25 +61,83 @@ class ApplicationViewSets(ModelViewSet):
                 return Response(serializer.data)
             return Response({"status":"Bu sizning servisingizga biriktirilmagan"},status=400)
 
+        return Response(self.get_serializer(ariza).data)
 
     def perform_create(self, serializer):
         return serializer.save(created_by = self.request.user)
+
+
+class SendToMahallaAPIView(APIView):
+    permission_classes = [IsAuthenticated, AplicationsSendMahallaPermissions]
+
+    def post(self, request, pk):
+        application = Application.objects.get(pk=pk)
+
+        if application.status != 'new':
+            return Response({'error': 'Invalid state'})
+
+        application.sent_to_mahalla_at = timezone.now()
+        application.status = 'sent_to_mahalla'
+
+        application.save(update_fields=['status','sent_to_mahalla_at'])
+        return Response({'status': 'ok'})
     
 
-class AplicationsSendMahalla(ModelViewSet):
-
+class AplicationStatus(ModelViewSet):
     queryset = Application.objects.all()
+    permission_classes = [IsAuthenticated,AplicationsSendMahallaPermissions]
     authentication_classes = [JWTAuthentication]
-    serializer_class = SendMahallaSerialisers
 
-    def get_permissions(self):
-        if self.action == 'create':
-            permission_classes = [IsAuthenticated,AplicationsSendMahallaPermissions]
-        return [permission() for permission in permission_classes]
+    @action(detail=True,methods=['post'],url_path='archive')
+    def archive(self,request:Request,pk):
+        aplication = Application.objects.get(pk = pk)
+        aplication.status = "archived"
 
-    def create(self, request, *args, **kwargs):
-        mahalla_id = request.data.get("id")
-        aplication = get_object_or_404(Application,pk=id)
+        aplication.save(
+            update_fields = ['status']
+        )
+
+        return Response({"status":"ok"})
+    
+    @action(detail=True,methods=['post'],url_path='close')
+    def close(self,request:Request,pk):
+        aplication = Application.objects.get(pk = pk)
+        aplication.status = "closed"
+        aplication.closed_at = timezone.now()
+        aplication.save(
+            update_fields = ['status','closed_at']
+        )
+
+        return Response({"status":"ok"})
+
+    @action(detail=True,methods=['post'],url_path='reopen')
+    def reopen(self,request:Request,pk):
+        aplication = Application.objects.get(pk = pk)
+        aplication.status = "reopened"
+
+        aplication.save(
+            update_fields = ['status']
+        )
+
+        return Response({"status":"ok"})
+    
 
 
+class AttachmentApiView(APIView):
+    permission_classes = [IsAuthenticated,AttachmentPermissions]
+    authentication_classes = [JWTAuthentication]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self,request:Request,pk)->Response:
+        aplication = get_object_or_404(Application,pk=pk)
         
+        serializers = AttachmentSerializers(data = request.data)
+        serializers.is_valid(raise_exception=True)
+
+        serializers.save(
+            application = aplication,
+            uploaded_by = request.user
+        )
+        return Response({"status":"ok"})
+    
+    
