@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import ApplicationViewSets,SendToMahallaAPIView,AplicationStatus,AttachmentApiView,ExportFileViewSets,MahallaRepost
+from .views import ApplicationViewSets,SendToMahallaAPIView,AplicationStatus,AttachmentApiView,ExportFileViewSets,MahallaRepost,DashboardSummaryAPIView
 
 urlpatterns = [
     path("applications/",ApplicationViewSets.as_view({"get":"list","post":"create"})),
@@ -19,5 +19,8 @@ urlpatterns = [
 
 
     # Hisobotlar ro'yxati
-    path("mahalla-reports/", MahallaRepost.as_view({"get":"list"}), name="")
+    path("mahalla-reports/", MahallaRepost.as_view({"get":"list"}), name=""),
+
+    # Dashboard Statistika
+    path("dashboard/summary/",DashboardSummaryAPIView.as_view())
 ]
