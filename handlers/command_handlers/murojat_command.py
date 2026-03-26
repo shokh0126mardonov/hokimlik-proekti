@@ -1,6 +1,8 @@
 from telegram import Update
 from telegram.ext import ContextTypes
+import html
 
+from ..buttons.murojat import murojat_button
 from ..service import user_status, murojat_comand_service
 
 
@@ -19,12 +21,16 @@ async def murojat_bot(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Murojatlar topilmadi")
         return
 
-    message = "\n\n".join(
-        f"<b>📄 Ariza:</b> #{item.get('app_number')}\n"
-        f"<b>🏢 Xizmat:</b> {item.get('service')}\n"
-        f"<b>👤 Fuqaro:</b> {item.get('citizen_name')}\n"
-        f"<b>📍 Manzil:</b> {item.get('address_text')}"
-        for item in data
-    )
+    for item in data:
+        
+        app_number = str(item.get('app_number') or '')
+        service = html.escape(str(item.get('service') or ''))
+        citizen_name = html.escape(str(item.get('citizen_name') or ''))
+        address_text = html.escape(str(item.get('address_text') or ''))
 
-    await update.message.reply_text(message, parse_mode="HTML")
+        message = (f"<b>📄 Ariza:</b> #{app_number}\n"
+            f"<b>🏢 Xizmat:</b> {service}\n"
+            f"<b>👤 Fuqaro:</b> {citizen_name}\n"
+            f"<b>📍 Manzil:</b> {address_text}"
+            )
+        await update.message.reply_text(message,reply_markup=murojat_button(item.get('id')), parse_mode="HTML")

@@ -59,7 +59,7 @@ class MahallaRepostSerializers(serializers.ModelSerializer):
 
     
 class AplicationSendBotSerializers(serializers.Serializer):
-
+    id = serializers.IntegerField()
     app_number = serializers.CharField(max_length=30)
     service = serializers.CharField(source="service.name")  # ✅
     citizen_name = serializers.CharField(max_length = 200)
