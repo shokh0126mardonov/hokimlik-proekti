@@ -55,3 +55,9 @@ class MahallaRepostSerializers(serializers.ModelSerializer):
     class Meta:
         model = MahallaReport
         fields = '__all__'
+
+    
+class AplicationSendBotSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = Application
+        fields = ['app_number','service','app_type','citizen_name','address_text']

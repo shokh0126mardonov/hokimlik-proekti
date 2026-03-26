@@ -1,5 +1,5 @@
 from .start import *
-from .request_command import *
-from .all_request import *
+from .murojat_command import *
+from .barcha_command import *
 from .help import *
 from .statistic import *
