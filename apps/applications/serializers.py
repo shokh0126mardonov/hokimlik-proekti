@@ -2,6 +2,7 @@ import os
 
 from rest_framework import serializers
 
+from apps.references.models import Service
 from apps.accounts.models import User
 from .models import Application,Attachment,MahallaReport
 
@@ -57,7 +58,13 @@ class MahallaRepostSerializers(serializers.ModelSerializer):
         fields = '__all__'
 
     
-class AplicationSendBotSerializers(serializers.ModelSerializer):
-    class Meta:
-        model = Application
-        fields = ['app_number','service','app_type','citizen_name','address_text']
+class AplicationSendBotSerializers(serializers.Serializer):
+
+    app_number = serializers.CharField(max_length=30)
+    service = serializers.CharField(source="service.name")  # ✅
+    citizen_name = serializers.CharField(max_length = 200)
+    address_text = serializers.CharField(max_length=500)
+
+    # class Meta:
+    #     model = Application
+    #     fields = ['app_number','service','app_type','citizen_name','address_text',"id", "content", "status"]
