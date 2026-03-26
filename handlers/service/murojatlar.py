@@ -20,7 +20,7 @@ def murojat_comand_service(user_id: int):
     - queryset execution
     - serialization
     """
-
+    
     user = (
         User.objects
         .select_related("mahalla")  # lazy load oldini oladi
