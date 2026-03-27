@@ -5,13 +5,13 @@ class Application(models.Model):
 
     class Status(models.TextChoices):
         NEW = "new", "Yangi"
-        IN_REVIEW = "in_review", "Ko‘rib chiqilmoqda"
         SENT_TO_MAHALLA = "sent_to_mahalla", "Mahallaga yuborildi"
+        IN_REVIEW = "in_review", "Ko‘rib chiqilmoqda"
         ACKNOWLEDGED = "acknowledged", "Qabul qilindi"
         INSPECTED = "inspected", "Tekshirildi"
         CLOSED = "closed", "Yopildi"
         ARCHIVED = "archived", "Arxivlandi"
-        REOPENED = "reopened", "Qayta ochildi"
+        REOPENED = "reopened", "Qayta ochildi" 
 
     class Priority(models.TextChoices):
         LOW = "low", "Low"
