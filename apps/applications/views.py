@@ -126,7 +126,7 @@ class AplicationStatus(AuditMixin,ModelViewSet):
     @action(detail=True,methods=['post'],url_path='reopen')
     def reopen(self,request:Request,pk):
         aplication = Application.objects.get(pk = pk)
-        aplication.status = "reopened"
+        aplication.status = aplication.Status.REOPENED
 
         aplication.save(
             update_fields = ['status']
