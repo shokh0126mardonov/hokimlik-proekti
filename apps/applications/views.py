@@ -12,16 +12,18 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.generics import ListCreateAPIView
 from rest_framework import status
 
-
+from apps.accounts.models import User
 from apps.audit.views import AuditMixin
 from .models import Application,Attachment,MahallaReport
 from .serializers import AplicationSerializers,AttachmentSerializers,AttachmentResponseSerializers,MahallaRepostSerializers
 from .permission import AplicationPermission,AplicationCreatePermission,AplicationsSendMahallaPermissions,AttachmentPermissions
+from .pagination import CustomPagination
 
 class ApplicationViewSets(AuditMixin,ModelViewSet):
     queryset = Application.objects.all()
     serializer_class = AplicationSerializers
     authentication_classes = [JWTAuthentication]
+    pagination_class = CustomPagination
 
     def get_permissions(self):
         if self.action in ["list",'retrieve']:
@@ -34,29 +36,39 @@ class ApplicationViewSets(AuditMixin,ModelViewSet):
 
     def list(self, request, *args, **kwargs):
 
-        if request.user.role in ['super_admin','hokim']:
+        if request.user.role in [User.Role.SUPER_ADMIN, User.Role.HOKIM]:
             queryset = Application.objects.all()
 
-        elif request.user.role == 'oqsoqol':
-            queryset = Application.objects.filter(mahalla = request.user.mahalla).all()
+        elif request.user.role == User.Role.OQSOQOL:
+            queryset = Application.objects.filter(mahalla=request.user.mahalla)
 
-        elif request.user.role == 'service_staff':  
-            queryset = Application.objects.filter(service = request.user.service).all()
+        elif request.user.role == User.Role.SERVICE_STAFF:
+            queryset = Application.objects.filter(service=request.user.service)
 
-        serializers = self.get_serializer(queryset,many=True)
-        return Response(serializers.data)
+        else:
+            queryset = Application.objects.none()
+
+        queryset = self.filter_queryset(queryset)
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
     
     def retrieve(self, request, *args, **kwargs):
 
         ariza = self.get_object()
 
-        if request.user.role == 'oqsoqol':
+        if request.user.role == User.Role.OQSOQOL:
             if ariza.mahalla ==  request.user.mahalla:
                 serializer = self.get_serializer(ariza)
                 return Response(serializer.data)
             return Response({"status":"Bu sizning mahallangizga biriktirilmagan"},status=400)
         
-        elif request.user.role == 'service_staff':
+        elif request.user.role == User.Role.SERVICE_STAFF:
             if ariza.service == request.user.service:
                 serializer = self.get_serializer(ariza)
                 return Response(serializer.data)

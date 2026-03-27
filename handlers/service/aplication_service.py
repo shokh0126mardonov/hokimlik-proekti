@@ -182,7 +182,7 @@ async def handle_file_upload(update: Update, context: ContextTypes.DEFAULT_TYPE)
         file_type=file_type,
         file_size=file_size,
     )
-
+    update_application_status(app_id, Application.Status.INSPECTED)
     await update.message.reply_text("✅ Fayl saqlandi")
 
     context.user_data.clear()
