@@ -3,6 +3,7 @@ asgiref==3.11.1
 attrs==25.4.0
 certifi==2026.2.25
 Django==6.0.3
+django-cors-headers==4.9.0
 django-filter==25.2
 django-ipware==7.0.1
 django-jazzmin==3.0.4

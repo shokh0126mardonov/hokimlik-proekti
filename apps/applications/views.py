@@ -200,3 +200,13 @@ class DashboardSummaryAPIView(APIView):
     def get(self, request):
         data = get_dashboard_summary()
         return Response(data)
+    
+class OqsoqolActivityAPIView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated,AplicationsSendMahallaPermissions]
+    serializer_class = AttachmentResponseSerializers
+
+    def get(self, request, pk):
+        user = get_object_or_404(User, pk=pk)
+        
+        return Response({"status":"ok"})

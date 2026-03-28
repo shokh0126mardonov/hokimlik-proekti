@@ -15,12 +15,13 @@ from apps.accounts.models import User
 from apps.applications.models import Application, MahallaReport, Attachment
 
 
+# STATES
 ASK_COMMENT = 1
 ASK_FILE = 2
 
 
 # =========================
-# DB FUNCTIONS
+# DB HELPERS
 # =========================
 
 @sync_to_async
@@ -33,113 +34,89 @@ def update_application_status(application_id, status):
     Application.objects.filter(id=application_id).update(status=status)
 
 
-@sync_to_async
-def save_comment_to_db(application_id, telegram_id, comment, message_id):
-    with transaction.atomic():
-        user = User.objects.filter(telegram_id=telegram_id).first()
+# =========================
+# ENTRY POINT
+# =========================
 
+async def handle_status_actions(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    data = query.data or ""
+
+    # KO‘RDIM
+    if data.startswith("murojat_kordim_"):
+        try:
+            app_id = data.split("murojat_kordim_")[1]
+        except IndexError:
+            await query.message.reply_text("❌ Xatolik")
+            return ConversationHandler.END
+
+        await update_application_status(app_id, Application.Status.ACKNOWLEDGED)
+        await query.edit_message_text("✅ Murojat ko‘rildi")
+        return ConversationHandler.END
+
+    # O‘RGANDIM → FLOW
+    elif data.startswith("murojat_organdim_"):
+        try:
+            app_id = data.split("murojat_organdim_")[1]
+        except IndexError:
+            await query.message.reply_text("❌ Xatolik")
+            return ConversationHandler.END
+
+        user = await get_user(query.from_user.id)
         if not user:
-            raise ValueError("User topilmadi")
+            await query.message.reply_text("❌ User topilmadi")
+            return ConversationHandler.END
 
-        Application.objects.filter(id=application_id).update(
-            status=Application.Status.INSPECTED
-        )
+        context.user_data.clear()
+        context.user_data["app_id"] = app_id
+        context.user_data["user"] = user
 
-        return MahallaReport.objects.create(
-            application_id=application_id,
-            oqsoqol=user,
-            comment_text=comment,
-            telegram_message_id=message_id,
-            action_type=MahallaReport.ActionType.COMMENTED,
-        )
+        await update_application_status(app_id, Application.Status.IN_REVIEW)
 
+        await query.message.reply_text("✍️ Izoh yozing:")
 
-@sync_to_async
-def save_file_to_db(user, application_id, file_bytes, filename, file_type, file_size):
-    application = Application.objects.get(id=application_id)
-
-    django_file = ContentFile(file_bytes, name=filename)
-
-    return Attachment.objects.create(
-        application=application,
-        file=django_file,
-        file_type=file_type,
-        file_size=file_size,
-        uploaded_by=user,
-    )
-
-
-# =========================
-# ENTRY HANDLERS
-# =========================
-
-async def handle_comment_entry(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-
-    app_id = query.data.split("murojat_comment_")[1]
-    context.user_data["app_id"] = app_id
-
-    await query.message.reply_text("✍️ Izoh yozing:")
-
-    return ASK_COMMENT
-
-
-async def handle_file_entry(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-
-    user = await get_user(query.from_user.id)
-
-    if not user:
-        await query.message.reply_text("❌ User topilmadi")
-        return ConversationHandler.END
-
-    app_id = query.data.split("murojat_file_")[1]
-
-    context.user_data["user"] = user
-    context.user_data["app_id"] = app_id
-
-    await query.message.reply_text("📎 Rasm yoki fayl yuboring:")
-
-    return ASK_FILE
-
-
-# =========================
-# COMMENT HANDLER
-# =========================
-
-async def save_comment(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text
-    app_id = context.user_data.get("app_id")
-
-    if not app_id:
-        await update.message.reply_text("❌ Xatolik")
-        return ConversationHandler.END
-
-    await save_comment_to_db(
-        application_id=app_id,
-        telegram_id=update.message.from_user.id,
-        comment=text,
-        message_id=update.message.message_id,
-    )
-
-    await update.message.reply_text("✅ Izoh saqlandi")
-
-    context.user_data.clear()
+        return ASK_COMMENT
 
     return ConversationHandler.END
 
 
 # =========================
-# FILE HANDLER
+# COMMENT STEP
+# =========================
+
+async def save_comment(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.message or not update.message.text:
+        await update.message.reply_text("❌ Matn yuboring")
+        return ASK_COMMENT
+
+    app_id = context.user_data.get("app_id")
+    user = context.user_data.get("user")
+
+    if not app_id or not user:
+        await update.message.reply_text("❌ Xatolik")
+        return ConversationHandler.END
+
+    context.user_data["comment"] = update.message.text.strip()
+    context.user_data["message_id"] = update.message.message_id
+
+    await update.message.reply_text("📎 Endi fayl yuboring:")
+
+    return ASK_FILE
+
+
+# =========================
+# FILE STEP + FINAL SAVE
 # =========================
 
 async def handle_file_upload(update: Update, context: ContextTypes.DEFAULT_TYPE):
     app_id = context.user_data.get("app_id")
     user = context.user_data.get("user")
+    comment = context.user_data.get("comment")
+    message_id = context.user_data.get("message_id")
 
-    if not app_id or not user:
+    if not all([app_id, user, comment]):
         await update.message.reply_text("❌ Xatolik")
         return ConversationHandler.END
 
@@ -151,7 +128,6 @@ async def handle_file_upload(update: Update, context: ContextTypes.DEFAULT_TYPE)
     # PHOTO
     if update.message.photo:
         photo = update.message.photo[-1]
-
         tg_file = await photo.get_file()
         file_bytes = await tg_file.download_as_bytearray()
 
@@ -162,7 +138,6 @@ async def handle_file_upload(update: Update, context: ContextTypes.DEFAULT_TYPE)
     # DOCUMENT
     elif update.message.document:
         doc = update.message.document
-
         tg_file = await doc.get_file()
         file_bytes = await tg_file.download_as_bytearray()
 
@@ -174,42 +149,36 @@ async def handle_file_upload(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await update.message.reply_text("❌ Fayl yuboring")
         return ASK_FILE
 
-    await save_file_to_db(
-        user=user,
-        application_id=app_id,
-        file_bytes=file_bytes,
-        filename=filename,
-        file_type=file_type,
-        file_size=file_size,
-    )
-    update_application_status(app_id, Application.Status.INSPECTED)
-    await update.message.reply_text("✅ Fayl saqlandi")
+    @sync_to_async
+    def save_all():
+        with transaction.atomic():
+            report = MahallaReport.objects.create(
+                application_id=app_id,
+                oqsoqol=user,
+                comment_text=comment,
+                telegram_message_id=message_id,
+                action_type=MahallaReport.ActionType.COMMENTED,
+            )
+
+            django_file = ContentFile(file_bytes, name=filename)
+
+            Attachment.objects.create(
+                report=report,
+                application_id=app_id,
+                file=django_file,
+                file_type=file_type,
+                file_size=file_size,
+                uploaded_by=user,
+            )
+
+            Application.objects.filter(id=app_id).update(
+                status=Application.Status.INSPECTED
+            )
+
+    await save_all()
+
+    await update.message.reply_text("✅ Izoh va fayl saqlandi")
 
     context.user_data.clear()
 
     return ConversationHandler.END
-
-
-# =========================
-# STATELESS HANDLER
-# =========================
-
-async def handle_status_actions(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-
-    data = query.data
-
-    if data.startswith("murojat_kordim_"):
-        app_id = data.split("murojat_kordim_")[1]
-
-        await update_application_status(app_id, Application.Status.ACKNOWLEDGED)
-
-        await query.edit_message_text("✅ Murojat ko‘rildi")
-
-    elif data.startswith("murojat_organdim_"):
-        app_id = data.split("murojat_organdim_")[1]
-
-        await update_application_status(app_id, Application.Status.IN_REVIEW)
-
-        await query.edit_message_text("✅ Murojat o‘rganildi")

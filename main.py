@@ -9,15 +9,18 @@ from telegram.ext import (
 )
 from decouple import config
 
-from handlers import start_bot, murojat_bot, barcha_command_bot
+from handlers import (
+    start_bot,
+    murojat_bot,
+    help_command_bot,
+    statistic_command_bot,
+)
 
 from handlers.service.aplication_service import (
     ASK_COMMENT,
     ASK_FILE,
     save_comment,
     handle_file_upload,
-    handle_comment_entry,
-    handle_file_entry,
     handle_status_actions,
 )
 
@@ -30,35 +33,23 @@ def main():
     # =========================
     application.add_handler(CommandHandler("start", start_bot))
     application.add_handler(CommandHandler("murojatlar", murojat_bot))
-    application.add_handler(CommandHandler("barcha", barcha_command_bot))
-    application.add_handler(CommandHandler("statistika", barcha_command_bot))
-    application.add_handler(CommandHandler("yordam", barcha_command_bot))
+    application.add_handler(CommandHandler("yordam", help_command_bot))
+    application.add_handler(CommandHandler("statistika", statistic_command_bot))
 
     # =========================
-    # COMMENT CONVERSATION
+    # SINGLE CONVERSATION
     # =========================
-    comment_conv = ConversationHandler(
+    conversation = ConversationHandler(
         entry_points=[
-            CallbackQueryHandler(handle_comment_entry, pattern=r"^murojat_comment_")
+            CallbackQueryHandler(
+                handle_status_actions,
+                pattern=r"^murojat_(kordim|organdim)_"
+            )
         ],
         states={
             ASK_COMMENT: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, save_comment)
             ],
-        },
-        fallbacks=[],
-        per_chat=True,
-        per_user=True,
-    )
-
-    # =========================
-    # FILE CONVERSATION
-    # =========================
-    file_conv = ConversationHandler(
-        entry_points=[
-            CallbackQueryHandler(handle_file_entry, pattern=r"^murojat_file_")
-        ],
-        states={
             ASK_FILE: [
                 MessageHandler(
                     filters.PHOTO | filters.Document.ALL,
@@ -71,21 +62,12 @@ def main():
         per_user=True,
     )
 
-    # =========================
-    # HANDLER ORDER (CRITICAL)
-    # =========================
-    application.add_handler(comment_conv)
-    application.add_handler(file_conv)
+    application.add_handler(conversation)
 
-    # FAqat stateless actionlar
-    application.add_handler(
-        CallbackQueryHandler(
-            handle_status_actions,
-            pattern=r"^murojat_(kordim|organdim)_"
-        )
+    application.run_polling(
+        allowed_updates=Update.ALL_TYPES,
+        drop_pending_updates=True,
     )
-
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
 if __name__ == "__main__":

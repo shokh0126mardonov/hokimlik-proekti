@@ -11,9 +11,9 @@ async def murojat_bot(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user = await user_status(telegram_id)
 
-    if not user:
-        await update.message.reply_text("Sizga ruxsat yo‘q")
-        return
+    # if not user:
+    #     await update.message.reply_text("Sizga ruxsat yo‘q")
+    #     return
 
     data = await murojat_comand_service(user.id)
 
