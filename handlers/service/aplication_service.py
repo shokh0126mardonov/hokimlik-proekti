@@ -13,7 +13,8 @@ from django.core.files.base import ContentFile
 
 from apps.accounts.models import User
 from apps.applications.models import Application, MahallaReport, Attachment
-
+from apps.applications.serializers import AplicationSendBotSerializers
+from ..buttons.murojat import  murojat_organdim_button
 
 # STATES
 ASK_COMMENT = 1
@@ -23,6 +24,10 @@ ASK_FILE = 2
 # =========================
 # DB HELPERS
 # =========================
+
+@sync_to_async
+def get_application(app_id):
+    return Application.objects.get(id=app_id)
 
 @sync_to_async
 def get_user(telegram_id):
@@ -51,10 +56,48 @@ async def handle_status_actions(update: Update, context: ContextTypes.DEFAULT_TY
         except IndexError:
             await query.message.reply_text("❌ Xatolik")
             return ConversationHandler.END
+        
+        
 
+
+        aplication = await get_application(app_id)
+        data = AplicationSendBotSerializers(aplication).data
+        message = (
+            f"<b>📄 Ariza №:</b> #{data.get('app_number')}\n"
+            f"━━━━━━━━━━━━━━━━━━━\n\n"
+
+            f"📝 <b>Murojaat turi:</b>\n"
+            f"{data.get('content')}\n\n"
+
+            f"👤 <b>Fuqaro:</b>\n"
+            f"{data.get('citizen_name')}\n\n"
+
+            f"📞 <b>Telefon:</b>\n"
+            f"{data.get('citizen_phone') or '—'}\n\n"
+
+            f"📍 <b>Manzil:</b>\n"
+            f"{data.get('address_text')}\n\n"
+
+            f"⏳ <b>Muddati:</b>\n"
+            f"{data.get('deadline') or '—'}\n\n"
+
+            f"🕒 <b>Yaratilgan sana:</b>\n"
+            f"{data.get('created_at')}\n\n"
+
+            f"━━━━━━━━━━━━━━━━━━━\n"
+            f"<i>📌 Iltimos, murojaatni ko‘rib chiqing</i>"
+        )
+
+
+        await query.edit_message_text(
+            message,
+            reply_markup=murojat_organdim_button(app_id),
+            parse_mode="HTML",
+        )
         await update_application_status(app_id, Application.Status.ACKNOWLEDGED)
-        await query.edit_message_text("✅ Murojat ko‘rildi")
+
         return ConversationHandler.END
+
 
     # O‘RGANDIM → FLOW
     elif data.startswith("murojat_organdim_"):

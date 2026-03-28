@@ -61,10 +61,14 @@ class MahallaRepostSerializers(serializers.ModelSerializer):
 class AplicationSendBotSerializers(serializers.Serializer):
     id = serializers.IntegerField()
     app_number = serializers.CharField(max_length=30)
-    service = serializers.CharField(source="service.name")  # ✅
-    citizen_name = serializers.CharField(max_length = 200)
-    address_text = serializers.CharField(max_length=500)
+    service = serializers.PrimaryKeyRelatedField(source="Service.name",read_only=True)  
+    app_type = serializers.PrimaryKeyRelatedField(source="ApplicationType.name", read_only=True)  
 
-    # class Meta:
-    #     model = Application
-    #     fields = ['app_number','service','app_type','citizen_name','address_text',"id", "content", "status"]
+    content = serializers.CharField()
+    citizen_name = serializers.CharField(max_length = 200)
+    citizen_phone = serializers.CharField(max_length=20)
+    address_text = serializers.CharField(max_length=500)
+    mahalla = serializers.PrimaryKeyRelatedField(source="Mahalla.name", read_only=True)  
+    deadline = serializers.DateField(format="%Y-%m-%d")
+    address_text = serializers.CharField(max_length=500)
+    created_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")

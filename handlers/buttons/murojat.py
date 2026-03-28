@@ -1,12 +1,15 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
+def murojat_organdim_button(id):
+    keyboard = [
+        [InlineKeyboardButton("izoh qo'shish", callback_data=f"murojat_organdim_{id}")]
+    ]
+    return InlineKeyboardMarkup(keyboard)
 
 def murojat_button(id):
     keyboard = [
-        [InlineKeyboardButton("✅ Ko'rdim", callback_data=f"murojat_kordim_{id}")],
+        [InlineKeyboardButton("✅ Batafsil ko'rish", callback_data=f"murojat_kordim_{id}")],
         [InlineKeyboardButton("🔍 Joyida o'rgandim", callback_data=f"murojat_organdim_{id}")],
-        # [InlineKeyboardButton("💬 Izoh qo'shish", callback_data=f"murojat_comment_{id}")],
-        # [InlineKeyboardButton("📷 Rasm yuborish", callback_data=f"murojat_file_{id}")]
 
     ]
     return InlineKeyboardMarkup(keyboard)

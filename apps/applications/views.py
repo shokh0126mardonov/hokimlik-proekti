@@ -72,7 +72,14 @@ class ApplicationViewSets(AuditMixin,ModelViewSet):
             if ariza.service == request.user.service:
                 serializer = self.get_serializer(ariza)
                 return Response(serializer.data)
+            
             return Response({"status":"Bu sizning servisingizga biriktirilmagan"},status=400)
+        
+        elif request.user.role == User.Role.HOKIM:
+            serializer = self.get_serializer(ariza)
+            ariza.status = Application.Status.IN_REVIEW
+            ariza.save(update_fields=['status'])
+            
 
         return Response(self.get_serializer(ariza).data)
 
