@@ -1,3 +1,4 @@
+import asyncio
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 
@@ -11,6 +12,7 @@ from rest_framework.request import Request
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.generics import ListCreateAPIView
 from rest_framework import status
+from yaml import serializer
 
 from apps.accounts.models import User
 from apps.audit.views import AuditMixin
@@ -18,6 +20,7 @@ from .models import Application,Attachment,MahallaReport
 from .serializers import AplicationSerializers,AttachmentSerializers,AttachmentResponseSerializers,MahallaRepostSerializers
 from .permission import AplicationPermission,AplicationCreatePermission,AplicationsSendMahallaPermissions,AttachmentPermissions
 from .pagination import CustomPagination
+from handlers.service.ogohlantirish import bot_send_message
 
 class ApplicationViewSets(AuditMixin,ModelViewSet):
     queryset = Application.objects.all()
@@ -84,6 +87,19 @@ class ApplicationViewSets(AuditMixin,ModelViewSet):
         return Response(self.get_serializer(ariza).data)
 
     def perform_create(self, serializer):
+
+        mahalla = serializer.validated_data.get("mahalla")
+        users = User.objects.filter(
+            mahalla=mahalla,
+            role=User.Role.OQSOQOL
+        ).all()
+
+        for user in users:
+            telegram_id = user.telegram_id
+            print(telegram_id)
+            if telegram_id:
+                asyncio.run(bot_send_message(chat_id=telegram_id,status="new"))
+
         return serializer.save(created_by = self.request.user)
 
 
@@ -91,13 +107,25 @@ class SendToMahallaAPIView(AuditMixin,APIView):
     permission_classes = [IsAuthenticated, AplicationsSendMahallaPermissions]
 
     def post(self, request, pk):
-        application = Application.objects.get(pk=pk)
+        application = get_object_or_404(Application, pk=pk)
 
-        if application.status != 'new':
-            return Response({'error': 'Invalid state'})
+        # if application.status != 'new':
+        #     return Response({'error': 'Invalid state'})
 
         application.sent_to_mahalla_at = timezone.now()
         application.status = 'sent_to_mahalla'
+
+        mahalla = application.mahalla
+        users = User.objects.filter(
+            mahalla=mahalla,
+            role=User.Role.OQSOQOL
+        ).all()
+
+        for user in users:
+            telegram_id = user.telegram_id
+            print(telegram_id)
+            if telegram_id:
+                asyncio.run(bot_send_message(chat_id=telegram_id,status="sent_to_mahalla"))
 
         application.save(update_fields=['status','sent_to_mahalla_at'])
         return Response({'status': 'ok'})
@@ -134,6 +162,16 @@ class AplicationStatus(AuditMixin,ModelViewSet):
     def reopen(self,request:Request,pk):
         aplication = Application.objects.get(pk = pk)
         aplication.status = aplication.Status.REOPENED
+
+        users = User.objects.filter(
+            mahalla=aplication.mahalla,
+            role=User.Role.OQSOQOL
+        ).all()
+        
+        for user in users:
+            telegram_id = user.telegram_id
+            if telegram_id:
+                asyncio.run(bot_send_message(chat_id=telegram_id,status="reopen"))
 
         aplication.save(
             update_fields = ['status']
