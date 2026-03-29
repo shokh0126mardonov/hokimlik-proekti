@@ -24,6 +24,10 @@ from handlers.service.aplication_service import (
     handle_status_actions,
 )
 
+from handlers.service import (
+    get_contact,
+    skip_file_callback,
+)
 
 def main():
     application = Application.builder().token(config("TOKEN")).build()
@@ -35,6 +39,7 @@ def main():
     application.add_handler(CommandHandler("murojatlar", murojat_bot))
     application.add_handler(CommandHandler("yordam", help_command_bot))
     application.add_handler(CommandHandler("statistika", statistic_command_bot))
+    application.add_handler(MessageHandler(filters.CONTACT,get_contact))
 
     # =========================
     # SINGLE CONVERSATION
@@ -54,7 +59,8 @@ def main():
                 MessageHandler(
                     filters.PHOTO | filters.Document.ALL,
                     handle_file_upload,
-                )
+                ),
+            CallbackQueryHandler(skip_file_callback, pattern="^skip_file$")
             ],
         },
         fallbacks=[],

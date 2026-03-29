@@ -15,7 +15,7 @@ from apps.accounts.models import User
 from apps.applications.models import Application, MahallaReport, Attachment
 from apps.applications.serializers import AplicationSendBotSerializers
 from ..buttons.murojat import  murojat_organdim_button
-
+from ..buttons.murojat import skip_file_button
 # STATES
 ASK_COMMENT = 1
 ASK_FILE = 2
@@ -144,7 +144,7 @@ async def save_comment(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["comment"] = update.message.text.strip()
     context.user_data["message_id"] = update.message.message_id
 
-    await update.message.reply_text("📎 Endi fayl yuboring:")
+    await update.message.reply_text("📎 Endi fayl yuboring:",reply_markup=skip_file_button())
 
     return ASK_FILE
 

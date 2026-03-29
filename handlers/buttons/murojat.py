@@ -13,3 +13,11 @@ def murojat_button(id):
 
     ]
     return InlineKeyboardMarkup(keyboard)
+
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
+def skip_file_button():
+    keyboard = [
+        [InlineKeyboardButton("⏭ Skip", callback_data="skip_file")]
+    ]
+    return InlineKeyboardMarkup(keyboard)
