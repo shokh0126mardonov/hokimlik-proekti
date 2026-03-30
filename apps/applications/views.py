@@ -16,7 +16,7 @@ from rest_framework import status
 from apps.accounts.models import User
 from apps.audit.views import AuditMixin
 from .models import Application,Attachment,MahallaReport
-from .serializers import AplicationSerializers,AttachmentSerializers,AttachmentResponseSerializers,MahallaRepostSerializers
+from .serializers import AplicationSerializers,AttachmentSerializers,AttachmentResponseSerializers,MahallaRepostSerializers,AplicationUpdateSerializers
 from .permission import AplicationPermission,AplicationCreatePermission,AplicationsSendMahallaPermissions,AttachmentPermissions
 from .pagination import CustomPagination
 from handlers.service.ogohlantirish import bot_send_message
@@ -34,6 +34,12 @@ class ApplicationViewSets(AuditMixin,ModelViewSet):
             permission_classes = [IsAuthenticated,AplicationCreatePermission]
 
         return [permission() for permission in permission_classes]
+    
+    def get_serializer_class(self):
+        if self.action == "partial_update":
+            return AplicationUpdateSerializers
+        
+
 
 
     def list(self, request, *args, **kwargs):
@@ -84,42 +90,12 @@ class ApplicationViewSets(AuditMixin,ModelViewSet):
             
 
         return Response(self.get_serializer(ariza).data)
-    
+
     def partial_update(self, request, *args, **kwargs):
         application = self.get_object()
-        mahalla = application.mahalla
 
-        users = User.objects.filter(
-            mahalla=mahalla,
-            role=User.Role.OQSOQOL
-        ).all()
-
-        status = request.data.get("status", None)
-
-        if status:
-            if status == Application.Status.SENT_TO_MAHALLA:
-                for user in users:
-                    telegram_id = user.telegram_id
-                    print(telegram_id)
-                    if telegram_id:
-                        asyncio.run(
-                            bot_send_message(
-                                chat_id=telegram_id,
-                                status="sent_to_mahalla"
-                            )
-                        )
-
-            elif status == Application.Status.REOPENED:
-                for user in users:
-                    telegram_id = user.telegram_id
-                    print(telegram_id)
-                    if telegram_id:
-                        asyncio.run(
-                            bot_send_message(
-                                chat_id=telegram_id,
-                                status="reopened"
-                            )
-                        )
+        if application.status != Application.Status.NEW:
+            return Response({"status": "permission denied"}, status=403)
 
         serializer = self.get_serializer(
             application,
@@ -132,6 +108,7 @@ class ApplicationViewSets(AuditMixin,ModelViewSet):
         return Response(serializer.data)
 
 
+    
     def perform_create(self, serializer):
         return serializer.save(created_by = self.request.user)
 

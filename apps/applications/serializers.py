@@ -72,3 +72,9 @@ class AplicationSendBotSerializers(serializers.Serializer):
     deadline = serializers.DateField(format="%Y-%m-%d")
     address_text = serializers.CharField(max_length=500)
     created_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
+
+
+class AplicationUpdateSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = Application
+        exclude = ['status']
