@@ -6,19 +6,8 @@ TOKEN = config("TOKEN")
 
 async def bot_send_message(chat_id: int, status: str):
     bot = Bot(token=TOKEN)
-
-    if status == "new":
-        text = (
-            "📩 <b>YANGI ARIZA QABUL QILINDI</b>\n"
-            "────────────────────────\n\n"
-            
-            "📌 <b>Status:</b> Yangi\n"
-            "📊 <b>Holat:</b> Ko‘rib chiqilmoqda\n\n"
-            
-            "ℹ️ <i>Arizani mahallangizga biriktirilgandan keyin sizga xabar beriladi</i>"
-        )
-
-    elif status == "reopened":
+    
+    if status == "reopened":
         text = (
             "🔄 <b>ARIZA QAYTA OCHILDI</b>\n"
             "────────────────────────\n\n"

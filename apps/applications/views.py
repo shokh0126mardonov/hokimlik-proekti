@@ -94,7 +94,7 @@ class ApplicationViewSets(AuditMixin,ModelViewSet):
             role=User.Role.OQSOQOL
         ).all()
 
-        status = request.data.get("status",None)
+        status = request.data.get("status", None)
 
         if status:
             if status == Application.Status.SENT_TO_MAHALLA:
@@ -102,31 +102,37 @@ class ApplicationViewSets(AuditMixin,ModelViewSet):
                     telegram_id = user.telegram_id
                     print(telegram_id)
                     if telegram_id:
-                        asyncio.run(bot_send_message(chat_id=telegram_id,status="sent_to_mahalla"))
+                        asyncio.run(
+                            bot_send_message(
+                                chat_id=telegram_id,
+                                status="sent_to_mahalla"
+                            )
+                        )
+
             elif status == Application.Status.REOPENED:
                 for user in users:
                     telegram_id = user.telegram_id
                     print(telegram_id)
                     if telegram_id:
-                        asyncio.run(bot_send_message(chat_id=telegram_id,status="reopened"))
+                        asyncio.run(
+                            bot_send_message(
+                                chat_id=telegram_id,
+                                status="reopened"
+                            )
+                        )
 
-        return Response({"staus":"ok"})
+        serializer = self.get_serializer(
+            application,
+            data=request.data,
+            partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
 
-\
+        return Response(serializer.data)
+
+
     def perform_create(self, serializer):
-
-        mahalla = serializer.validated_data.get("mahalla")
-        users = User.objects.filter(
-            mahalla=mahalla,
-            role=User.Role.OQSOQOL
-        ).all()
-
-        for user in users:
-            telegram_id = user.telegram_id
-            print(telegram_id)
-            if telegram_id:
-                asyncio.run(bot_send_message(chat_id=telegram_id,status="new"))
-
         return serializer.save(created_by = self.request.user)
 
 
