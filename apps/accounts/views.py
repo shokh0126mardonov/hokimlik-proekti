@@ -1,4 +1,3 @@
-import pandas as pd
 
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
@@ -77,39 +76,3 @@ class LoginView(TokenObtainPairView):
 
 
 
-
-class ExcelUploadView(APIView):
-    
-    parser_classes = [MultiPartParser, FormParser]
-    permission_classes = [IsAuthenticated,Is_SuperAdmin]
-    authentication_classes = [JWTAuthentication]
-
-    def post(self, request):
-        file = request.FILES.get("file")
-
-        if not file:
-            return Response({"error": "File yuborilmadi"}, status=400)
-
-        df = pd.read_excel(file)
-
-        # columnlarni rename qilish
-        df.columns = ["id", "mahalla", "full_name", "phone"]
-
-        # cleaning
-        df = df[~df["mahalla"].astype(str).str.contains("sektor", case=False, na=False)]
-        df = df.dropna(subset=["mahalla", "full_name", "phone"])
-
-        df["phone"] = df["phone"].astype(str).str.replace(r"\D", "", regex=True)
-
-        # output
-        result = []
-        for row in df.itertuples(index=False):
-            item = {
-                "mahalla": row.mahalla,
-                "full_name": row.full_name,
-                "phone": row.phone,
-            }
-            print(item)
-            result.append(item)
-
-        return Response({"data": result})

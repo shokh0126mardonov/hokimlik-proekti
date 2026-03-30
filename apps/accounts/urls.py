@@ -1,13 +1,12 @@
 from django.urls import path
 
 from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
     TokenRefreshView,
     TokenVerifyView,
     TokenBlacklistView
 )
 
-from .views import UserCrudVievSet,LoginView,ExcelUploadView
+from .views import UserCrudVievSet,LoginView
 urlpatterns = [
 
     path('auth/login/', LoginView.as_view(), name='token_obtain_pair'),
@@ -19,5 +18,4 @@ urlpatterns = [
     path("users/",UserCrudVievSet.as_view({"get":"list","post":"create"})),
     path("users/<int:pk>/",UserCrudVievSet.as_view({"get":"retrieve","patch":"partial_update","delete":"destroy"})),
 
-    path("addexceluser/",ExcelUploadView.as_view())
 ]
