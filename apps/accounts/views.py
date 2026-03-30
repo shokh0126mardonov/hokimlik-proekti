@@ -2,6 +2,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 from apps.audit.views import AuditMixin
 from .models import User
@@ -10,6 +11,7 @@ from .serializers import UserSerializer,RegisterSerializers
 
 
 class UserCrudVievSet(AuditMixin,ModelViewSet):
+
     authentication_classes = [JWTAuthentication]
     queryset = User.objects.filter(is_active = True).all()
     permission_classes = [IsAuthenticated,Is_SuperAdmin]
@@ -35,3 +37,40 @@ class UserCrudVievSet(AuditMixin,ModelViewSet):
         instance.save(update_fields=["is_active"])
 
         return Response(status=204)
+    
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import AuthenticationFailed
+
+# class CustomTokenObtainPairView(TokenObtainPairView):
+#     def get_tokens_for_user(self, user):
+#         if not user.is_active:
+#             raise AuthenticationFailed("User is not active")
+
+#         refresh = RefreshToken.for_user(user)
+
+#         return {
+#             'refresh': str(refresh),
+#             'access': str(refresh.access_token),
+#             'role':user.role
+#         }
+
+
+class LoginView(TokenObtainPairView):
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+        except AuthenticationFailed as e:
+            return Response({"detail": str(e)}, status=401)
+
+        user = serializer.user
+        if not user.is_active:
+            return Response({"detail": "User is not active"}, status=401)
+
+        refresh = RefreshToken.for_user(user)
+
+        return Response({
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+            'role': user.role
+        })
