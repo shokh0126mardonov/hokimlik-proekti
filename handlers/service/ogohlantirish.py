@@ -15,7 +15,7 @@ async def bot_send_message(chat_id: int, status: str):
             "📌 <b>Status:</b> Yangi\n"
             "📊 <b>Holat:</b> Ko‘rib chiqilmoqda\n\n"
             
-            "ℹ️ <i>Arizani ko‘rish uchun /murojatlar buyrug‘idan foydalaning.</i>"
+            "ℹ️ <i>Arizani mahallangizga biriktirilgandan keyin sizga xabar beriladi</i>"
         )
 
     elif status == "reopen":

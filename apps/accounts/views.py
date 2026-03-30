@@ -1,9 +1,16 @@
+import pandas as pd
+
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.tokens import RefreshToken
+from uritemplate import api
 
+from apps.references.models import Mahalla
 from apps.audit.views import AuditMixin
 from .models import User
 from .permissions import Is_SuperAdmin
@@ -37,23 +44,16 @@ class UserCrudVievSet(AuditMixin,ModelViewSet):
         instance.save(update_fields=["is_active"])
 
         return Response(status=204)
-    
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.exceptions import AuthenticationFailed
+   
+    def perform_update(self, serializer):
+        instance = self.get_object()
 
-# class CustomTokenObtainPairView(TokenObtainPairView):
-#     def get_tokens_for_user(self, user):
-#         if not user.is_active:
-#             raise AuthenticationFailed("User is not active")
+        old_phone = instance.phone
+        new_instance = serializer.save()
 
-#         refresh = RefreshToken.for_user(user)
-
-#         return {
-#             'refresh': str(refresh),
-#             'access': str(refresh.access_token),
-#             'role':user.role
-#         }
-
+        if old_phone != new_instance.phone:
+            new_instance.telegram_id = None
+            new_instance.save(update_fields=["telegram_id"])
 
 class LoginView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
@@ -74,3 +74,42 @@ class LoginView(TokenObtainPairView):
             'access': str(refresh.access_token),
             'role': user.role
         })
+
+
+
+
+class ExcelUploadView(APIView):
+    
+    parser_classes = [MultiPartParser, FormParser]
+    permission_classes = [IsAuthenticated,Is_SuperAdmin]
+    authentication_classes = [JWTAuthentication]
+
+    def post(self, request):
+        file = request.FILES.get("file")
+
+        if not file:
+            return Response({"error": "File yuborilmadi"}, status=400)
+
+        df = pd.read_excel(file)
+
+        # columnlarni rename qilish
+        df.columns = ["id", "mahalla", "full_name", "phone"]
+
+        # cleaning
+        df = df[~df["mahalla"].astype(str).str.contains("sektor", case=False, na=False)]
+        df = df.dropna(subset=["mahalla", "full_name", "phone"])
+
+        df["phone"] = df["phone"].astype(str).str.replace(r"\D", "", regex=True)
+
+        # output
+        result = []
+        for row in df.itertuples(index=False):
+            item = {
+                "mahalla": row.mahalla,
+                "full_name": row.full_name,
+                "phone": row.phone,
+            }
+            print(item)
+            result.append(item)
+
+        return Response({"data": result})
