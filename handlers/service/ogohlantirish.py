@@ -18,7 +18,7 @@ async def bot_send_message(chat_id: int, status: str):
             "ℹ️ <i>Arizani mahallangizga biriktirilgandan keyin sizga xabar beriladi</i>"
         )
 
-    elif status == "reopen":
+    elif status == "reopened":
         text = (
             "🔄 <b>ARIZA QAYTA OCHILDI</b>\n"
             "────────────────────────\n\n"

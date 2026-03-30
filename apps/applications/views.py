@@ -12,7 +12,6 @@ from rest_framework.request import Request
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.generics import ListCreateAPIView
 from rest_framework import status
-from yaml import serializer
 
 from apps.accounts.models import User
 from apps.audit.views import AuditMixin
@@ -85,7 +84,35 @@ class ApplicationViewSets(AuditMixin,ModelViewSet):
             
 
         return Response(self.get_serializer(ariza).data)
+    
+    def partial_update(self, request, *args, **kwargs):
+        application = self.get_object()
+        mahalla = application.mahalla
 
+        users = User.objects.filter(
+            mahalla=mahalla,
+            role=User.Role.OQSOQOL
+        ).all()
+
+        status = request.data.get("status",None)
+
+        if status:
+            if status == Application.Status.SENT_TO_MAHALLA:
+                for user in users:
+                    telegram_id = user.telegram_id
+                    print(telegram_id)
+                    if telegram_id:
+                        asyncio.run(bot_send_message(chat_id=telegram_id,status="sent_to_mahalla"))
+            elif status == Application.Status.REOPENED:
+                for user in users:
+                    telegram_id = user.telegram_id
+                    print(telegram_id)
+                    if telegram_id:
+                        asyncio.run(bot_send_message(chat_id=telegram_id,status="reopened"))
+
+        return Response({"staus":"ok"})
+
+\
     def perform_create(self, serializer):
 
         mahalla = serializer.validated_data.get("mahalla")
@@ -109,9 +136,6 @@ class SendToMahallaAPIView(AuditMixin,APIView):
     def post(self, request, pk):
         application = get_object_or_404(Application, pk=pk)
 
-        # if application.status != 'new':
-        #     return Response({'error': 'Invalid state'})
-
         application.sent_to_mahalla_at = timezone.now()
         application.status = 'sent_to_mahalla'
 
@@ -125,7 +149,7 @@ class SendToMahallaAPIView(AuditMixin,APIView):
             telegram_id = user.telegram_id
             print(telegram_id)
             if telegram_id:
-                asyncio.run(bot_send_message(chat_id=telegram_id,status="sent_to_mahalla"))
+                asyncio.run(bot_send_message(chat_id=telegram_id,status=Application.Status.SENT_TO_MAHALLA))
 
         application.save(update_fields=['status','sent_to_mahalla_at'])
         return Response({'status': 'ok'})
@@ -171,7 +195,7 @@ class AplicationStatus(AuditMixin,ModelViewSet):
         for user in users:
             telegram_id = user.telegram_id
             if telegram_id:
-                asyncio.run(bot_send_message(chat_id=telegram_id,status="reopen"))
+                asyncio.run(bot_send_message(chat_id=telegram_id,status=Application.Status.REOPENED))
 
         aplication.save(
             update_fields = ['status']
@@ -252,6 +276,16 @@ class OqsoqolActivityAPIView(APIView):
     serializer_class = AttachmentResponseSerializers
 
     def get(self, request, pk):
-        user = get_object_or_404(User, pk=pk)
-        
-        return Response({"status":"ok"})
+        user = get_object_or_404(User, pk=pk,role = User.Role.OQSOQOL)
+
+        acknowledged = Application.objects.filter(mahalla=user.mahalla,status=Application.Status.ACKNOWLEDGED).count()
+        inspected = Application.objects.filter(mahalla=user.mahalla,status=Application.Status.INSPECTED).count()
+        closed = Application.objects.filter(mahalla=user.mahalla,status=Application.Status.CLOSED).count()
+        reopened = Application.objects.filter(mahalla=user.mahalla,status=Application.Status.REOPENED).count()
+
+        return Response({
+            "oqsoqol ko'rgan arizalar":acknowledged,
+            "oqsoqol tekshirgan arizalar":inspected,
+            "yopilgan arizalar":closed,
+            "qayta ochilgan arizalar":reopened
+        })
