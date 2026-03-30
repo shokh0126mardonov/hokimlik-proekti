@@ -27,6 +27,8 @@ class UserCrudVievSet(AuditMixin,ModelViewSet):
             return RegisterSerializers
         elif self.action == "list":
             return UserSerializer
+        else:
+            return UserSerializer
         
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -43,16 +45,15 @@ class UserCrudVievSet(AuditMixin,ModelViewSet):
         instance.save(update_fields=["is_active"])
 
         return Response(status=204)
-   
     def perform_update(self, serializer):
         instance = self.get_object()
 
         old_phone = instance.phone
-        new_instance = serializer.save()
-
-        if old_phone != new_instance.phone:
-            new_instance.telegram_id = None
-            new_instance.save(update_fields=["telegram_id"])
+        new_phone = serializer.validated_data.get("phone", old_phone)
+        if old_phone != new_phone:
+            serializer.save(telegram_id=None)
+        else:
+            serializer.save()
 
 class LoginView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):

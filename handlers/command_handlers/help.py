@@ -1,4 +1,3 @@
-from turtle import update
 
 from telegram import Update
 from telegram.ext import ContextTypes

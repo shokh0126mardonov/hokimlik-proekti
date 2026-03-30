@@ -14,11 +14,26 @@ from .permissions import AuditPermissions
 # apps/audit/mixins.py
 
 
+from django.db import transaction
+from django.shortcuts import get_object_or_404
+
 
 class AuditMixin:
-    audit_exclude_methods = ["GET", "HEAD", "OPTIONS"]
+    """
+    DRF View / ViewSet uchun universal audit mixin.
 
-    # ===== CREATE =====
+    Features:
+    - action-based exclude (list, retrieve)
+    - safe serialization (fallback bor)
+    - transaction.on_commit bilan write
+    - application resolve (instance / request / URL)
+    - DRY create/update/delete override
+    """
+
+    audit_exclude_actions = ["list", "retrieve"]
+
+    # ===================== CREATE =====================
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -38,11 +53,11 @@ class AuditMixin:
 
         return self._build_response(instance, 201)
 
-    # ===== UPDATE =====
+    # ===================== UPDATE =====================
+
     def update(self, request, *args, **kwargs):
         return self._update(request, partial=False, *args, **kwargs)
 
-    # ===== PATCH =====
     def partial_update(self, request, *args, **kwargs):
         return self._update(request, partial=True, *args, **kwargs)
 
@@ -70,7 +85,8 @@ class AuditMixin:
 
         return self._build_response(updated_instance, 200)
 
-    # ===== DELETE =====
+    # ===================== DELETE =====================
+
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         old_data = self._serialize(instance)
@@ -88,10 +104,14 @@ class AuditMixin:
         from rest_framework.response import Response
         return Response(status=204)
 
-    # ===== CORE LOGIC =====
+    # ===================== LOGIC =====================
 
     def _log(self, request, instance, action, old_data, new_data):
-        if request.method in self.audit_exclude_methods:
+        """
+        Core audit writer (action-based filtering)
+        """
+        # 🔥 faqat list/retrieve skip
+        if hasattr(self, "action") and self.action in self.audit_exclude_actions:
             return
 
         from apps.audit.models import AuditLog
@@ -113,48 +133,77 @@ class AuditMixin:
                 application=application,
             )
 
-        transaction.on_commit(_write)
+        # 🔥 transaction safe
+        try:
+            transaction.on_commit(_write)
+        except Exception:
+            # fallback (agar transaction yo‘q bo‘lsa)
+            _write()
 
+    # ===================== APPLICATION RESOLVE =====================
 
     def _resolve_application(self, instance, request):
-        from apps.applications.models import Application
+        """
+        Application ni aniqlash:
+        1. instance o‘zi Application bo‘lsa
+        2. instance.application mavjud bo‘lsa
+        3. request.data ichida bo‘lsa
+        4. URL params (nested route)
+        """
 
+        try:
+            from apps.applications.models import Application
+        except Exception:
+            return None
+
+        # 1. instance o‘zi application
         if isinstance(instance, Application):
             return instance
 
-        # 1. instance.application
+        # 2. FK orqali
         app = getattr(instance, "application", None)
         if app:
             return app
 
-        # 2. request.data
+        # 3. request.data orqali
         application_id = request.data.get("application")
         if application_id:
-            return self._get_application(application_id)
+            return self._safe_get_application(application_id)
 
-        # 3. URL (nested routes)
+        # 4. URL params (MUHIM FIX)
         application_id = (
             self.kwargs.get("application_pk")
             or self.kwargs.get("application_id")
+            or self.kwargs.get("pk")
         )
+
         if application_id:
-            return self._get_application(application_id)
+            return self._safe_get_application(application_id)
 
         return None
 
-    def _get_application(self, pk):
-        from applications.models import Application
-
+    def _safe_get_application(self, pk):
         try:
+            from apps.applications.models import Application
             return Application.objects.get(pk=pk)
-        except Application.DoesNotExist:
+        except Exception:
             return None
 
-    # ===== SERIALIZATION =====
+    # ===================== SERIALIZATION =====================
 
     def _serialize(self, instance):
-        serializer_class = self.get_response_serializer()
-        return serializer_class(instance).data
+        """
+        Safe serializer (fallback bor)
+        """
+        try:
+            serializer_class = self.get_response_serializer()
+            return serializer_class(instance).data
+        except Exception:
+            # fallback minimal data
+            return {
+                "id": getattr(instance, "pk", None),
+                "repr": str(instance),
+            }
 
     def _build_response(self, instance, status_code):
         from rest_framework.response import Response
@@ -163,7 +212,10 @@ class AuditMixin:
         return Response(serializer_class(instance).data, status=status_code)
 
     def get_response_serializer(self):
-        return self.get_serializer_class()
+        """
+        Agar alohida response serializer bo‘lsa ishlatadi
+        """
+        return getattr(self, "response_serializer_class", self.get_serializer_class())
     
 
 class AuditLogAPIView(APIView):
@@ -174,7 +226,7 @@ class AuditLogAPIView(APIView):
     def get(self, request: Request, pk: int) -> Response:
         application = get_object_or_404(Application, pk=pk)
 
-        logs = application.audit_logs.all()
+        logs = AuditLog.objects.filter(application = application).all()
 
         return Response(
             AuditlogsSerializers(logs, many=True).data

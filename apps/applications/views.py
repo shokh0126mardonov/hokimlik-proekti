@@ -32,12 +32,16 @@ class ApplicationViewSets(AuditMixin,ModelViewSet):
             permission_classes = [IsAuthenticated,AplicationPermission]
         elif self.action in['create','partial_update']:
             permission_classes = [IsAuthenticated,AplicationCreatePermission]
-
+        else:
+            permission_classes = [IsAuthenticated]
+        
         return [permission() for permission in permission_classes]
     
     def get_serializer_class(self):
         if self.action == "partial_update":
             return AplicationUpdateSerializers
+        else:
+            return AplicationSerializers
         
 
 
@@ -96,6 +100,8 @@ class ApplicationViewSets(AuditMixin,ModelViewSet):
 
         if application.status != Application.Status.NEW:
             return Response({"status": "permission denied"}, status=403)
+        
+        return super().partial_update(request, *args, **kwargs)
 
         serializer = self.get_serializer(
             application,
@@ -194,23 +200,29 @@ class AttachmentApiView(AuditMixin,ListCreateAPIView):
     authentication_classes = [JWTAuthentication]
     parser_classes = [MultiPartParser, FormParser]
 
+        
+
     def get_serializer_class(self):
         if self.request.method == "POST":
             return AttachmentSerializers
         return AttachmentResponseSerializers
     
+    def list(self, request, *args, **kwargs):
+        pk = kwargs.get("pk")
+        aplication = get_object_or_404(Application,pk=pk)
+        
+        data = Attachment.objects.filter(application = aplication).all()
+        return Response(AttachmentResponseSerializers(data,many=True).data)
+    
     def create(self, request, *args, **kwargs):
+        application_id = self.kwargs.get("pk")
 
-        from ipware import get_client_ip
-        client_ip, is_routable = get_client_ip(request)
+        application = get_object_or_404(Application, id=application_id)
 
         serializer = self.get_serializer(data=request.data)
-
         serializer.is_valid(raise_exception=True)
 
-        self.perform_create(serializer)
-
-        instance = serializer.instance
+        instance = serializer.save(application=application)
 
         response_serializer = AttachmentResponseSerializers(instance)
 
@@ -255,20 +267,28 @@ class DashboardSummaryAPIView(APIView):
     
 class OqsoqolActivityAPIView(APIView):
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated,AplicationsSendMahallaPermissions]
-    serializer_class = AttachmentResponseSerializers
+    permission_classes = [IsAuthenticated, AplicationsSendMahallaPermissions]
 
     def get(self, request, pk):
-        user = get_object_or_404(User, pk=pk,role = User.Role.OQSOQOL)
+        user = User.objects.filter(
+            pk=pk,
+            role=User.Role.OQSOQOL
+        ).first()
 
-        acknowledged = Application.objects.filter(mahalla=user.mahalla,status=Application.Status.ACKNOWLEDGED).count()
-        inspected = Application.objects.filter(mahalla=user.mahalla,status=Application.Status.INSPECTED).count()
-        closed = Application.objects.filter(mahalla=user.mahalla,status=Application.Status.CLOSED).count()
-        reopened = Application.objects.filter(mahalla=user.mahalla,status=Application.Status.REOPENED).count()
+        if not user:
+            return Response({"detail": "User not found"}, status=404)
+
+        mahalla = user.mahalla
+
+        if not mahalla:
+            return Response("mahallaga biriktirilmagan",400)
+
+        qs = Application.objects.filter(mahalla=mahalla)
 
         return Response({
-            "oqsoqol ko'rgan arizalar":acknowledged,
-            "oqsoqol tekshirgan arizalar":inspected,
-            "yopilgan arizalar":closed,
-            "qayta ochilgan arizalar":reopened
+            "oqsoqol ko'rgan arizalar": qs.filter(status=Application.Status.ACKNOWLEDGED).count(),
+            "oqsoqol tekshirgan arizalar": qs.filter(status=Application.Status.INSPECTED).count(),
+            "yopilgan arizalar": qs.filter(status=Application.Status.CLOSED).count(),
+            "qayta ochilgan arizalar": qs.filter(status=Application.Status.REOPENED).count(),
         })
+            

@@ -28,14 +28,18 @@ class ServiceViewsets(AuditMixin,ModelViewSet):
         if self.action in ["list","retrive"]:
             permission_classes  = [IsAuthenticated]
         else:
-            permission_classes = [GetMahallaPermissions]
+            permission_classes = [IsAuthenticated,GetMahallaPermissions]
 
         return [permission() for permission in permission_classes]
+    
+    def perform_destroy(self, instance):
+        instance.is_active = False
+        instance.save(update_fields=["is_active"])
     
 
 class ApplicationTypeViewsets(AuditMixin,ModelViewSet):
     permission_classes = [IsAuthenticated]
-    queryset = ApplicationType.objects.all()
+    queryset = Service.objects.filter(is_active=True)
     serializer_class = ApplicationTypeSerializers
 
     def get_permissions(self):
@@ -45,3 +49,4 @@ class ApplicationTypeViewsets(AuditMixin,ModelViewSet):
             permission_classes = [GetMahallaPermissions]
 
         return [permission() for permission in permission_classes]
+    
