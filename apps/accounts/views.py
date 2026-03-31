@@ -55,15 +55,18 @@ class UserCrudVievSet(AuditMixin,ModelViewSet):
         else:
             serializer.save()
 
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
+
+
 class LoginView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        try:
-            serializer.is_valid(raise_exception=True)
-        except AuthenticationFailed as e:
-            return Response({"detail": str(e)}, status=401)
+        serializer.is_valid(raise_exception=True)
 
         user = serializer.user
+
         if not user.is_active:
             return Response({"detail": "User is not active"}, status=401)
 
@@ -72,8 +75,8 @@ class LoginView(TokenObtainPairView):
         return Response({
             'refresh': str(refresh),
             'access': str(refresh.access_token),
-            'role': user.role
+            'role': user.role,
+            'id': user.id
         })
-
 
 
