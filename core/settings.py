@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 import os
 
+from datetime import timedelta
 from decouple import config,Csv
 from pathlib import Path
 
@@ -162,7 +163,6 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 10,
 }
 
-from datetime import timedelta
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
