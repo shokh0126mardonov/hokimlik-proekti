@@ -50,10 +50,19 @@ class UserCrudVievSet(AuditMixin,ModelViewSet):
 
         old_phone = instance.phone
         new_phone = serializer.validated_data.get("phone", old_phone)
+
+        password = serializer.validated_data.get("password", None)
+
+        # Avval boshqa fieldlarni saqlaymiz (passwordsiz)
         if old_phone != new_phone:
-            serializer.save(telegram_id=None)
+            user = serializer.save(telegram_id=None)
         else:
-            serializer.save()
+            user = serializer.save()
+
+        # Password bo‘lsa alohida hash qilib save qilamiz
+        if password:
+            user.set_password(password)
+            user.save(update_fields=["password"])
 
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.response import Response
