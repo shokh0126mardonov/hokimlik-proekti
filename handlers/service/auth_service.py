@@ -1,4 +1,4 @@
-from telegram import Update
+from telegram import Update,ReplyKeyboardRemove
 from telegram.ext import (
     ContextTypes,
 )
@@ -55,7 +55,7 @@ async def get_contact(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if user_id:
         await update.message.reply_text(
-            f"✅ Raqamingiz tasdiqlandi: {phone_number}"
+            f"✅ Raqamingiz tasdiqlandi: {phone_number}",reply_markup=ReplyKeyboardRemove()
         )
     else:
         await update.message.reply_text(
