@@ -8,6 +8,9 @@ class Service(models.Model):
 
     def __str__(self):
         return f"{self.pk} {self.name}"
+    
+    class Meta:
+        ordering = ['-pk']
 
 
 class Mahalla(models.Model):
@@ -17,6 +20,9 @@ class Mahalla(models.Model):
 
     def __str__(self):
         return f"{self.pk} {self.name}"
+    
+    class Meta:
+        ordering = ['-pk']
 
 
 class ApplicationType(models.Model):
@@ -24,3 +30,6 @@ class ApplicationType(models.Model):
 
     def __str__(self):
         return f"{self.pk} {self.name}"
+    
+    class Meta:
+        ordering = ['-pk']

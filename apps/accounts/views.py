@@ -38,12 +38,6 @@ class UserCrudVievSet(AuditMixin,ModelViewSet):
         data.pop("password")
         return Response(data,status=201)
     
-    # def destroy(self, request, *args, **kwargs):
-    #     instance = self.get_object()
-    #     instance.is_active = False
-    #     instance.save(update_fields=["is_active"])
-
-    #     return Response(status=204)
     def perform_update(self, serializer):
         instance = self.get_object()
 

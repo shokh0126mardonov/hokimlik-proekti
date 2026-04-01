@@ -52,3 +52,6 @@ class AuditLog(models.Model):
 
     def __str__(self):
         return f"{self.entity_type}:{self.entity_id} [{self.action}]"
+    
+    class Meta:
+        ordering = ['-pk']

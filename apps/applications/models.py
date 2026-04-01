@@ -124,6 +124,9 @@ class MahallaReport(models.Model):
 
     def __str__(self):
         return f"{self.oqsoqol.username}"
+    
+    class Meta:
+        ordering = ['-pk']
 
 class Attachment(models.Model):
 
@@ -159,3 +162,6 @@ class Attachment(models.Model):
 
     def __str__(self):
         return f"{self.pk} {self.created_at.strftime("%Y-%m-%d - %H-%M")}"
+    
+    class Meta:
+        ordering = ['-pk']
