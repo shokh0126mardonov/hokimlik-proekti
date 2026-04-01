@@ -1,19 +1,18 @@
 
-from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
+from rest_framework.request import Request
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
-from uritemplate import api
+from rest_framework.generics import CreateAPIView
 
-from apps.references.models import Mahalla
 from apps.audit.views import AuditMixin
 from .models import User
 from .permissions import Is_SuperAdmin
-from .serializers import UserSerializer,RegisterSerializers
+from .serializers import UserSerializer,RegisterSerializers,OqsoqolAddSerializers
 
 
 class UserCrudVievSet(AuditMixin,ModelViewSet):
@@ -89,3 +88,27 @@ class LoginView(TokenObtainPairView):
         })
 
 
+from rest_framework.generics import CreateAPIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.db import transaction
+import json
+
+class AddOqsoqol(AuditMixin, CreateAPIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated, Is_SuperAdmin]
+    serializer_class = OqsoqolAddSerializers
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        file = serializer.validated_data['file']
+
+        # if not file.name.lower().endswith('.json'):
+        #     return Response("json file yuboring",400)
+
+        
+        
+
+        return Response({"detail": "Oqsoqollar muvaffaqiyatli qo‘shildi"}, status=201)

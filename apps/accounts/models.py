@@ -10,7 +10,7 @@ class User(AbstractUser):
         OQSOQOL = "oqsoqol", "Oqsoqol"
 
     full_name = models.CharField(max_length=200)
-    phone = models.CharField(max_length=20, blank=True)
+    phone = models.CharField(max_length=20, blank=True,unique=True)
 
     role = models.CharField(max_length=20, choices=Role.choices)
 

@@ -6,7 +6,7 @@ from rest_framework_simplejwt.views import (
     TokenBlacklistView
 )
 
-from .views import UserCrudVievSet,LoginView
+from .views import UserCrudVievSet,LoginView,AddOqsoqol
 urlpatterns = [
 
     path('auth/login/', LoginView.as_view(), name='token_obtain_pair'),
@@ -18,4 +18,6 @@ urlpatterns = [
     path("users/",UserCrudVievSet.as_view({"get":"list","post":"create"})),
     path("users/<int:pk>/",UserCrudVievSet.as_view({"get":"retrieve","patch":"partial_update","delete":"destroy"})),
 
-]
+    # path("add-oqsoqol/",AddOqsoqol.as_view())
+
+]       

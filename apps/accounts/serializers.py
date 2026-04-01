@@ -51,3 +51,6 @@ class RegisterSerializers(serializers.ModelSerializer):
         user.save()
 
         return user
+
+class OqsoqolAddSerializers(serializers.Serializer):
+    file = serializers.FileField()
