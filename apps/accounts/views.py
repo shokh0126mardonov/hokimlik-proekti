@@ -78,7 +78,8 @@ class LoginView(TokenObtainPairView):
             'refresh': str(refresh),
             'access': str(refresh.access_token),
             'role': user.role,
-            'id': user.id
+            'id': user.id,
+            "service": getattr(user.service, "id", None)  
         })
 
 
