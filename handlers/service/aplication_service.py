@@ -116,7 +116,7 @@ async def handle_status_actions(update: Update, context: ContextTypes.DEFAULT_TY
         context.user_data["app_id"] = app_id
         context.user_data["user"] = user
 
-        await update_application_status(app_id, Application.Status.IN_REVIEW)
+        # await update_application_status(app_id, Application.Status.IN_REVIEW)
 
         await query.message.reply_text("✍️ Izoh yozing:")
 
