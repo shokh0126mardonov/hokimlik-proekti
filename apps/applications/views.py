@@ -89,8 +89,9 @@ class ApplicationViewSets(AuditMixin,ModelViewSet):
         
         elif request.user.role == User.Role.HOKIM:
             serializer = self.get_serializer(ariza)
-            ariza.status = Application.Status.IN_REVIEW
-            ariza.save(update_fields=['status'])
+            if ariza.status == Application.Status.NEW:
+                ariza.status = Application.Status.IN_REVIEW
+                ariza.save(update_fields=['status'])
             
 
         return Response(self.get_serializer(ariza).data)
