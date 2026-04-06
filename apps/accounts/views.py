@@ -14,6 +14,7 @@ from .models import User
 from .permissions import Is_SuperAdmin
 from .serializers import UserSerializer,RegisterSerializers,OqsoqolAddSerializers
 
+from django.db import IntegrityError
 
 class UserCrudVievSet(AuditMixin,ModelViewSet):
 
@@ -32,11 +33,28 @@ class UserCrudVievSet(AuditMixin,ModelViewSet):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+
+        try:
+            self.perform_create(serializer)
+
+        except IntegrityError as e:
+            # PostgreSQL constraint name ni to‘g‘ri olish
+            if hasattr(e.__cause__, "diag"):
+                constraint = e.__cause__.diag.constraint_name
+                if constraint == "unique_super_admin":
+                    return Response(
+                        {"role": ["Super admin already exists"]},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            return Response(
+                {"detail": "Database constraint error"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         data = serializer.data
-        data.pop("password")
-        return Response(data,status=201)
+        data.pop("password", None)
+
+        return Response(data, status=status.HTTP_201_CREATED)
     
     def perform_update(self, serializer):
         instance = self.get_object()
@@ -46,13 +64,11 @@ class UserCrudVievSet(AuditMixin,ModelViewSet):
 
         password = serializer.validated_data.get("password", None)
 
-        # Avval boshqa fieldlarni saqlaymiz (passwordsiz)
         if old_phone != new_phone:
             user = serializer.save(telegram_id=None)
         else:
             user = serializer.save()
 
-        # Password bo‘lsa alohida hash qilib save qilamiz
         if password:
             user.set_password(password)
             user.save(update_fields=["password"])

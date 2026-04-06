@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.db.models import Q
 
 
 class User(AbstractUser):
@@ -56,3 +57,10 @@ class User(AbstractUser):
     class Meta:
         verbose_name = "Accountlar"
         ordering = ['-pk']
+        constraints = [
+            models.UniqueConstraint(
+                fields=["role"],
+                condition=Q(role="super_admin"),
+                name="unique_super_admin"
+            )
+        ]
