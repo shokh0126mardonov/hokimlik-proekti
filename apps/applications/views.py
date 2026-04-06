@@ -43,9 +43,6 @@ class ApplicationViewSets(AuditMixin,ModelViewSet):
         else:
             return AplicationSerializers
         
-
-
-
     def list(self, request, *args, **kwargs):
 
         if request.user.role in [User.Role.SUPER_ADMIN, User.Role.HOKIM]:
