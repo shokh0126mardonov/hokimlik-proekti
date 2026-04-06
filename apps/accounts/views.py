@@ -30,22 +30,38 @@ class UserCrudVievSet(AuditMixin,ModelViewSet):
         else:
             return UserSerializer
         
+    
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
+        role = serializer.validated_data.get("role")
+
         try:
-            self.perform_create(serializer)
+            with transaction.atomic():
+                user = serializer.save()
+
+                # 🔐 Password hash (critical safety)
+                if "password" in serializer.validated_data:
+                    user.set_password(serializer.validated_data["password"])
+                    user.save(update_fields=["password"])
 
         except IntegrityError as e:
-            # PostgreSQL constraint name ni to‘g‘ri olish
             if hasattr(e.__cause__, "diag"):
                 constraint = e.__cause__.diag.constraint_name
-                if constraint == "unique_super_admin":
-                    return Response(
-                        {"role": ["Super admin already exists"]},
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
+
+                if constraint == "unique_super_admin_hokim":
+                    if role == "super_admin":
+                        return Response(
+                            {"role": ["Super admin already exists"]},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+                    elif role == "hokim":
+                        return Response(
+                            {"role": ["Hokim already exists"]},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+
             return Response(
                 {"detail": "Database constraint error"},
                 status=status.HTTP_400_BAD_REQUEST

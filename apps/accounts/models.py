@@ -60,7 +60,7 @@ class User(AbstractUser):
         constraints = [
             models.UniqueConstraint(
                 fields=["role"],
-                condition=Q(role="super_admin"),
-                name="unique_super_admin"
+                condition=Q(role__in=["super_admin", "hokim"]),
+                name="unique_super_admin_hokim"
             )
         ]
