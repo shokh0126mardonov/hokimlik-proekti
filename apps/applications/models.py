@@ -5,9 +5,9 @@ class Application(models.Model):
 
     class Status(models.TextChoices):
         NEW = "new", "Yangi"
-        IN_REVIEW = "in_review", "Ko‘rib chiqilmoqda"
+        IN_REVIEW = "in_review", "Hokim ko'rdi"
         SENT_TO_MAHALLA = "sent_to_mahalla", "Mahallaga yuborildi"
-        ACKNOWLEDGED = "acknowledged", "Qabul qilindi"
+        ACKNOWLEDGED = "acknowledged", "Oqsoqol ko'rdi"
         INSPECTED = "inspected", "Tekshirildi"
         CLOSED = "closed", "Yopildi"
         ARCHIVED = "archived", "Arxivlandi"

@@ -53,9 +53,10 @@ class AttachmentResponseSerializers(serializers.ModelSerializer):
     
 
 class MahallaRepostSerializers(serializers.ModelSerializer):
+    oqsoqol = UserSerializer(read_only=True)
     class Meta:
         model = MahallaReport
-        fields = '__all__'
+        fields = ['id','action_type','comment_text','telegram_message_id','created_at','application','oqsoqol']
 
     
 class AplicationSendBotSerializers(serializers.Serializer):
