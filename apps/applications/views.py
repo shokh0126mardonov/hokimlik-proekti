@@ -17,7 +17,7 @@ from apps.accounts.models import User
 from apps.audit.views import AuditMixin
 from .models import Application,Attachment,MahallaReport
 from .serializers import AplicationSerializers,AttachmentSerializers,AttachmentResponseSerializers,MahallaRepostSerializers,AplicationUpdateSerializers
-from .permission import AplicationPermission,AplicationCreatePermission,AplicationsSendMahallaPermissions,AttachmentPermissions
+from .permission import AplicationPermission,AplicationCreatePermission,AplicationsSendMahallaPermissions,AttachmentPermissions,AttachmentGetPermissions
 from .pagination import CustomPagination
 from handlers.service.ogohlantirish import bot_send_message
 
@@ -198,8 +198,13 @@ class AttachmentApiView(AuditMixin,ListCreateAPIView):
     authentication_classes = [JWTAuthentication]
     parser_classes = [MultiPartParser, FormParser]
 
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            permission_classes = [IsAuthenticated,AttachmentGetPermissions]
+        else:
+            permission_classes = [IsAuthenticated,AttachmentPermissions]
+        return [permission() for permission in permission_classes]
         
-
     def get_serializer_class(self):
         if self.request.method == "POST":
             return AttachmentSerializers

@@ -34,3 +34,11 @@ class AttachmentPermissions(BasePermission):
         return request.user and (
             request.user.super_admin or  request.user.service_staff
         )
+
+class AttachmentGetPermissions:
+    message = 'siz attachment qila olmaysiz!'
+
+    def has_permission(self, request, view):
+        return request.user and (
+            request.user.super_admin or  request.user.service_staff or request.user.hokim
+        )
