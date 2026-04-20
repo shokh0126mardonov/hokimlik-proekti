@@ -6,12 +6,12 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.generics import CreateAPIView
 
 from apps.audit.views import AuditMixin
 from .models import User
 from .permissions import Is_SuperAdmin
-from .serializers import UserSerializer, RegisterSerializers, OqsoqolAddSerializers
+from .serializers import UserSerializer, RegisterSerializers
+from ..references.models import Mahalla
 
 from django.db import IntegrityError
 
@@ -114,27 +114,117 @@ class LoginView(TokenObtainPairView):
                 "service": getattr(user.service, "id", None),
             }
         )
+    
 
-
-from rest_framework.generics import CreateAPIView
+import json
+import secrets
+import string
+from rest_framework.views import APIView
+from rest_framework.parsers import MultiPartParser, JSONParser
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import IsAdminUser
 from django.db import transaction
-import json
+from .models import User
 
 
-class AddOqsoqol(AuditMixin, CreateAPIView):
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated, Is_SuperAdmin]
-    serializer_class = OqsoqolAddSerializers
+def generate_password(length=12):
+    alphabet = string.ascii_letters + string.digits
+    return "".join(secrets.choice(alphabet) for _ in range(length))
 
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
 
-        file = serializer.validated_data["file"]
+class ImportOqsoqolView(APIView):
+    permission_classes = [Is_SuperAdmin]
+    parser_classes = [MultiPartParser, JSONParser]
 
-        # if not file.name.lower().endswith('.json'):
-        #     return Response("json file yuboring",400)
+    def post(self, request):
+        if "file" in request.FILES:
+            try:
+                items = json.load(request.FILES["file"])
+            except json.JSONDecodeError as e:
+                return Response(
+                    {"error": f"Noto'g'ri JSON: {e}"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        else:
+            items = request.data
 
-        return Response({"detail": "Oqsoqollar muvaffaqiyatli qo‘shildi"}, status=201)
+        # 2) Bitta obyekt kelsa ham, listga o'rab olamiz
+        if isinstance(items, dict):
+            items = [items]
+
+        if not isinstance(items, list):
+            return Response(
+                {"error": "JSON obyekt yoki ro'yxat (array) bo'lishi kerak"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        created, skipped, errors = 0, 0, []
+        created_users = []
+
+        # 3) Har bir elementni qayta ishlash
+        for i, item in enumerate(items):
+            try:
+                username = item.get("username")
+                password = item.get("password")
+                full_name = item.get("full_name")
+                phone = item.get("phone")
+                mahalla_name = item.get("mahalla")
+
+                # Majburiy maydonlarni tekshirish
+                if not all([username, full_name, phone, mahalla_name]):
+                    errors.append(
+                        f"#{i}: username, full_name, phone, mahalla majburiy"
+                    )
+                    continue
+
+                # Telefon yoki username band bo'lsa — o'tkazib yuboramiz
+                if User.objects.filter(phone=phone).exists():
+                    skipped += 1
+                    errors.append(f"#{i}: phone {phone} allaqachon mavjud")
+                    continue
+
+                if User.objects.filter(username=username).exists():
+                    skipped += 1
+                    errors.append(f"#{i}: username '{username}' allaqachon mavjud")
+                    continue
+
+                # 4) Mahallani topish yoki yaratish
+                mahalla, _ = Mahalla.objects.get_or_create(
+                    name=mahalla_name.strip(),
+                )
+
+                # 5) Foydalanuvchini yaratish
+                with transaction.atomic():
+                    user = User(
+                        username=username,
+                        full_name=full_name,
+                        phone=phone,
+                        role=User.Role.OQSOQOL,
+                        mahalla=mahalla,
+                        telegram_id=item.get("telegram_id"),
+                        is_active=item.get("is_active", True),
+                    )
+                    final_password = password or generate_password()
+                    user.set_password(final_password)
+                    user.save()
+
+                    created += 1
+                    created_users.append({
+                        "username": username,
+                        "phone": str(phone),
+                        "mahalla": mahalla.name,
+                        "password": final_password,
+                    })
+            except Exception as e:
+                errors.append(f"#{i}: {e}")
+
+        return Response(
+            {
+                "created": created,
+                "skipped": skipped,
+                "errors": errors,
+                "created_users": created_users,
+            },
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
+        )
