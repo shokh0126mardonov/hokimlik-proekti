@@ -1,5 +1,6 @@
 import asyncio
 from django.utils import timezone
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 
 from rest_framework.viewsets import ModelViewSet
@@ -32,6 +33,8 @@ from .permission import (
 )
 from .pagination import CustomPagination
 from handlers.service.ogohlantirish import bot_send_message
+from .services import get_dashboard_summary
+from .ai import generate_application_pdf
 
 
 class ApplicationViewSets(AuditMixin, ModelViewSet):
@@ -39,6 +42,41 @@ class ApplicationViewSets(AuditMixin, ModelViewSet):
     serializer_class = AplicationSerializers
     authentication_classes = [JWTAuthentication]
     pagination_class = CustomPagination
+
+
+    @action(detail=True, methods=["get"], url_path="attachments-to-pdf")
+    def attachments_to_pdf(self, request, pk=None):
+        application = self.get_object()
+
+        # 🔹 latest report
+        report = application.reports.first()
+
+        # 🔹 barcha attachmentlar (application + report)
+        attachments = Attachment.objects.filter(
+            Q(application=application) | Q(report=report)
+        )
+
+        # 🔹 pdf path
+        pdf_path = os.path.join(
+            settings.MEDIA_ROOT,
+            "pdfs",
+            f"app_{application.id}.pdf"
+        )
+
+        # 🔥 SERVICE chaqiramiz (object yuboramiz)
+        generate_application_pdf(
+            application=application,
+            report=report,
+            attachments=attachments,
+            output_path=pdf_path
+        )
+
+        return FileResponse(
+            open(pdf_path, "rb"),
+            content_type="application/pdf",
+            as_attachment=True,
+            filename=f"application_{application.id}.pdf"
+        )
 
     def get_permissions(self):
         if self.action in ["list", "retrieve"]:
@@ -256,15 +294,6 @@ class MahallaRepost(AuditMixin, ModelViewSet):
     serializer_class = MahallaRepostSerializers
 
 
-# apps/dashboard/views.py
-
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-
-from .services import get_dashboard_summary
-
-
 class DashboardSummaryAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -307,7 +336,29 @@ class OqsoqolActivityAPIView(APIView):
             }
         )
 
+import os
+from django.http import FileResponse, Http404
+from django.conf import settings
+from rest_framework.views import APIView
 
-class GetAttachmentsAi(APIView):
-    def get(self, request: Request) -> Response:
-        return Response("ok")
+
+class DownloadAttachmentAPIView(APIView):
+
+    def get(self, request, pk):
+        from .models import Attachment
+
+        try:
+            attachment = Attachment.objects.get(pk=pk)
+        except Attachment.DoesNotExist:
+            raise Http404("File not found")
+
+        file_path = attachment.file.path
+
+        if not os.path.exists(file_path):
+            raise Http404("File not found on disk")
+
+        return FileResponse(
+            open(file_path, "rb"),
+            as_attachment=True,
+            filename=os.path.basename(file_path)
+        )

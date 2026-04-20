@@ -1,4 +1,7 @@
 from django.urls import path
+from django.urls import path
+from rest_framework.routers import DefaultRouter
+
 
 from .views import (
     ApplicationViewSets,
@@ -9,10 +12,17 @@ from .views import (
     MahallaRepost,
     DashboardSummaryAPIView,
     OqsoqolActivityAPIView,
-    GetAttachmentsAi,
+    DownloadAttachmentAPIView
 )
 
+
+router = DefaultRouter()
+router.register(r'applications', ApplicationViewSets, basename='applications')
+router.register(r'preview-pdf',ApplicationViewSets,basename='aplications1')
+
+
 urlpatterns = [
+    path("attachments/<int:pk>/download/", DownloadAttachmentAPIView.as_view()),
     path(
         "applications/", ApplicationViewSets.as_view({"get": "list", "post": "create"})
     ),
@@ -39,5 +49,7 @@ urlpatterns = [
     # Dashboard Statistika
     path("dashboard/summary/", DashboardSummaryAPIView.as_view()),
     path("dashboard/oqsoqol-activity/<int:pk>/", OqsoqolActivityAPIView.as_view()),
-    path("get-attachments-pdf", GetAttachmentsAi),
+# urls.py
 ]
+
+urlpatterns += router.urls
