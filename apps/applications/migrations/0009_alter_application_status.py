@@ -4,15 +4,27 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('applications', '0008_alter_attachment_options_alter_mahallareport_options'),
+        ("applications", "0008_alter_attachment_options_alter_mahallareport_options"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='application',
-            name='status',
-            field=models.CharField(choices=[('new', 'Yangi'), ('in_review', "Hokim ko'rdi"), ('sent_to_mahalla', 'Mahallaga yuborildi'), ('acknowledged', "Oqsoqol ko'rdi"), ('inspected', 'Tekshirildi'), ('closed', 'Yopildi'), ('archived', 'Arxivlandi'), ('reopened', 'Qayta ochildi')], default='new', max_length=30),
+            model_name="application",
+            name="status",
+            field=models.CharField(
+                choices=[
+                    ("new", "Yangi"),
+                    ("in_review", "Hokim ko'rdi"),
+                    ("sent_to_mahalla", "Mahallaga yuborildi"),
+                    ("acknowledged", "Oqsoqol ko'rdi"),
+                    ("inspected", "Tekshirildi"),
+                    ("closed", "Yopildi"),
+                    ("archived", "Arxivlandi"),
+                    ("reopened", "Qayta ochildi"),
+                ],
+                default="new",
+                max_length=30,
+            ),
         ),
     ]

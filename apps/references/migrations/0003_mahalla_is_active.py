@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('references', '0002_alter_mahalla_district'),
+        ("references", "0002_alter_mahalla_district"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='mahalla',
-            name='is_active',
+            model_name="mahalla",
+            name="is_active",
             field=models.BooleanField(default=True),
         ),
     ]

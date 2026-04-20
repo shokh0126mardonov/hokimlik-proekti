@@ -3,6 +3,7 @@ from telegram.ext import ContextTypes
 
 from ..service import user_status
 
+
 def send_contact_keyboard():
     from telegram import ReplyKeyboardMarkup, KeyboardButton
 
@@ -15,7 +16,7 @@ async def start_bot(update: Update, context: ContextTypes.DEFAULT_TYPE):
     telegram_id = update.message.from_user.id
     full_name = update.message.from_user.full_name
 
-    user = await user_status(telegram_id) 
+    user = await user_status(telegram_id)
 
     if user:
         await update.message.reply_text(
@@ -23,12 +24,11 @@ async def start_bot(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"🏡 Siz <strong>{user.mahalla}</strong> mahallasining oqsoqoli sifatida "
             f"<i>tizimga muvaffaqiyatli kirdingiz</i>.\n\n"
             f"✨ <u>Sizga muvaffaqiyatli ish kuni tilaymiz!</u>",
-            parse_mode="HTML"
+            parse_mode="HTML",
         )
     else:
         await update.message.reply_text(
-            f"👋 <b>Assalomu alaykum, {full_name}!</b>\n\n"
-            f" contactingizni yuboring",
+            f"👋 <b>Assalomu alaykum, {full_name}!</b>\n\n contactingizni yuboring",
             parse_mode="HTML",
-            reply_markup=send_contact_keyboard()
+            reply_markup=send_contact_keyboard(),
         )

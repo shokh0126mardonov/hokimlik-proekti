@@ -4,21 +4,23 @@ from telegram.ext import ContextTypes, ConversationHandler
 import os
 import django
 
-from apps.applications.models import  Application, MahallaReport
+from apps.applications.models import Application, MahallaReport
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings")
 django.setup()
 
 from asgiref.sync import sync_to_async
 
+
 @sync_to_async
 def save_comment(app_id, comment, user, message_id):
-    report= MahallaReport.objects.create(
-            application_id=app_id,
-            oqsoqol=user,
-            comment_text=comment,
-            telegram_message_id=message_id,
-            action_type=MahallaReport.ActionType.COMMENTED,
-        )   
+    report = MahallaReport.objects.create(
+        application_id=app_id,
+        oqsoqol=user,
+        comment_text=comment,
+        telegram_message_id=message_id,
+        action_type=MahallaReport.ActionType.COMMENTED,
+    )
     Application.objects.filter(id=app_id).update(status=Application.Status.INSPECTED)
 
     report.save()

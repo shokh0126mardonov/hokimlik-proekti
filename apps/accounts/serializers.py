@@ -5,6 +5,7 @@ from rest_framework import serializers
 # User = get_user_model()
 from .models import User
 
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -20,29 +21,35 @@ class UserSerializer(serializers.ModelSerializer):
             "telegram_id",
             "created_at",
             "service",
-            "mahalla"
+            "mahalla",
         ]
 
-    
-class RegisterSerializers(serializers.ModelSerializer):
 
+class RegisterSerializers(serializers.ModelSerializer):
     full_name = serializers.CharField(max_length=200)
-    role = serializers.ChoiceField(choices=[User.Role.SUPER_ADMIN,User.Role.HOKIM,User.Role.OQSOQOL,User.Role.SERVICE_STAFF])
+    role = serializers.ChoiceField(
+        choices=[
+            User.Role.SUPER_ADMIN,
+            User.Role.HOKIM,
+            User.Role.OQSOQOL,
+            User.Role.SERVICE_STAFF,
+        ]
+    )
 
     class Meta:
         model = User
         fields = [
-            "username", 
+            "username",
             "password",
             "full_name",
-            "role", 
+            "role",
             "email",
             "phone",
             "telegram_id",
             "created_at",
             "service",
-            "mahalla"
-            ]
+            "mahalla",
+        ]
 
     def create(self, validated_data):
         password = validated_data.pop("password")
@@ -52,6 +59,7 @@ class RegisterSerializers(serializers.ModelSerializer):
         user.save()
 
         return user
+
 
 class OqsoqolAddSerializers(serializers.Serializer):
     file = serializers.FileField()

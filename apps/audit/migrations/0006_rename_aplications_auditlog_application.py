@@ -4,15 +4,14 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('audit', '0005_remove_auditlog_audit_audit_entity__9535bf_idx_and_more'),
+        ("audit", "0005_remove_auditlog_audit_audit_entity__9535bf_idx_and_more"),
     ]
 
     operations = [
         migrations.RenameField(
-            model_name='auditlog',
-            old_name='aplications',
-            new_name='application',
+            model_name="auditlog",
+            old_name="aplications",
+            new_name="application",
         ),
     ]

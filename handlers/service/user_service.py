@@ -18,12 +18,8 @@ def _get_user(telegram_id: int):
     """
 
     return (
-        User.objects
-        .select_related("mahalla")  # keyinchalik ishlatilsa safe bo‘ladi
-        .filter(
-            Q(telegram_id=telegram_id) &
-            Q(role=User.Role.OQSOQOL)
-        )
+        User.objects.select_related("mahalla")  # keyinchalik ishlatilsa safe bo‘ladi
+        .filter(Q(telegram_id=telegram_id) & Q(role=User.Role.OQSOQOL))
         .first()
     )
 

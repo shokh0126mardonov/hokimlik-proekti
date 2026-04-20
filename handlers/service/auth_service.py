@@ -1,4 +1,4 @@
-from telegram import Update,ReplyKeyboardRemove
+from telegram import Update, ReplyKeyboardRemove
 from telegram.ext import (
     ContextTypes,
 )
@@ -49,15 +49,13 @@ async def get_contact(update: Update, context: ContextTypes.DEFAULT_TYPE):
     phone_number = normalize_last9(contact.phone_number)
 
     user_id = await user_contact_service(
-        user_id=update.message.from_user.id,
-        phone_number=phone_number
+        user_id=update.message.from_user.id, phone_number=phone_number
     )
 
     if user_id:
         await update.message.reply_text(
-            f"✅ Raqamingiz tasdiqlandi: {phone_number}",reply_markup=ReplyKeyboardRemove()
+            f"✅ Raqamingiz tasdiqlandi: {phone_number}",
+            reply_markup=ReplyKeyboardRemove(),
         )
     else:
-        await update.message.reply_text(
-            "❌ Bu raqam tizimda topilmadi."
-        )
+        await update.message.reply_text("❌ Bu raqam tizimda topilmadi.")

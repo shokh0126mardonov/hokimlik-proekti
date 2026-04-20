@@ -6,4 +6,3 @@ class Is_SuperAdmin(BasePermission):
 
     def has_permission(self, request, view):
         return request.user and request.user.super_admin
-    

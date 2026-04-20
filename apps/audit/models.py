@@ -4,7 +4,6 @@ from django.db import models
 
 
 class AuditLog(models.Model):
-
     class Action(models.TextChoices):
         CREATE = "CREATE"
         UPDATE = "UPDATE"
@@ -30,10 +29,7 @@ class AuditLog(models.Model):
     entity_type = models.CharField(max_length=100)
     entity_id = models.CharField(max_length=64)
 
-    action = models.CharField(
-        max_length=10,
-        choices=Action.choices
-    )
+    action = models.CharField(max_length=10, choices=Action.choices)
 
     old_data = models.JSONField(null=True, blank=True)
     new_data = models.JSONField(null=True, blank=True)
@@ -52,6 +48,6 @@ class AuditLog(models.Model):
 
     def __str__(self):
         return f"{self.entity_type}:{self.entity_id} [{self.action}]"
-    
+
     class Meta:
-        ordering = ['-pk']
+        ordering = ["-pk"]

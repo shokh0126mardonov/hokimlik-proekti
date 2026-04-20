@@ -4,22 +4,21 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('references', '0004_remove_mahalla_is_active_service_is_active'),
+        ("references", "0004_remove_mahalla_is_active_service_is_active"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='applicationtype',
-            options={'ordering': ['-pk']},
+            name="applicationtype",
+            options={"ordering": ["-pk"]},
         ),
         migrations.AlterModelOptions(
-            name='mahalla',
-            options={'ordering': ['-pk']},
+            name="mahalla",
+            options={"ordering": ["-pk"]},
         ),
         migrations.AlterModelOptions(
-            name='service',
-            options={'ordering': ['-pk']},
+            name="service",
+            options={"ordering": ["-pk"]},
         ),
     ]

@@ -4,19 +4,18 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('references', '0003_mahalla_is_active'),
+        ("references", "0003_mahalla_is_active"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='mahalla',
-            name='is_active',
+            model_name="mahalla",
+            name="is_active",
         ),
         migrations.AddField(
-            model_name='service',
-            name='is_active',
+            model_name="service",
+            name="is_active",
             field=models.BooleanField(default=True),
         ),
     ]

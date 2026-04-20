@@ -65,9 +65,7 @@ class AuditMixin:
         instance = self.get_object()
         old_data = self._serialize(instance)
 
-        serializer = self.get_serializer(
-            instance, data=request.data, partial=partial
-        )
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
 
         self.perform_update(serializer)
@@ -102,6 +100,7 @@ class AuditMixin:
         )
 
         from rest_framework.response import Response
+
         return Response(status=204)
 
     # ===================== LOGIC =====================
@@ -185,6 +184,7 @@ class AuditMixin:
     def _safe_get_application(self, pk):
         try:
             from apps.applications.models import Application
+
             return Application.objects.get(pk=pk)
         except Exception:
             return None
@@ -216,18 +216,15 @@ class AuditMixin:
         Agar alohida response serializer bo‘lsa ishlatadi
         """
         return getattr(self, "response_serializer_class", self.get_serializer_class())
-    
+
 
 class AuditLogAPIView(APIView):
-
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated, AuditPermissions]
 
     def get(self, request: Request, pk: int) -> Response:
         application = get_object_or_404(Application, pk=pk)
 
-        logs = AuditLog.objects.filter(application = application).all()
+        logs = AuditLog.objects.filter(application=application).all()
 
-        return Response(
-            AuditlogsSerializers(logs, many=True).data
-        )
+        return Response(AuditlogsSerializers(logs, many=True).data)

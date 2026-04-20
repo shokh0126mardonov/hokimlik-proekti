@@ -5,16 +5,20 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('applications', '0003_alter_mahallareport_action_type'),
-        ('audit', '0002_alter_auditlog_entity_id'),
+        ("applications", "0003_alter_mahallareport_action_type"),
+        ("audit", "0002_alter_auditlog_entity_id"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='auditlog',
-            name='aplications',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='applications.application'),
+            model_name="auditlog",
+            name="aplications",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to="applications.application",
+            ),
         ),
     ]

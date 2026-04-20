@@ -6,44 +6,64 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('applications', '0003_alter_mahallareport_action_type'),
-        ('audit', '0007_alter_auditlog_application'),
+        ("applications", "0003_alter_mahallareport_action_type"),
+        ("audit", "0007_alter_auditlog_application"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='auditlog',
-            name='action',
-            field=models.CharField(choices=[('CREATE', 'Create'), ('UPDATE', 'Update'), ('PATCH', 'Patch'), ('DELETE', 'Delete')], max_length=10),
+            model_name="auditlog",
+            name="action",
+            field=models.CharField(
+                choices=[
+                    ("CREATE", "Create"),
+                    ("UPDATE", "Update"),
+                    ("PATCH", "Patch"),
+                    ("DELETE", "Delete"),
+                ],
+                max_length=10,
+            ),
         ),
         migrations.AlterField(
-            model_name='auditlog',
-            name='entity_id',
+            model_name="auditlog",
+            name="entity_id",
             field=models.CharField(max_length=64),
         ),
         migrations.AlterField(
-            model_name='auditlog',
-            name='entity_type',
+            model_name="auditlog",
+            name="entity_type",
             field=models.CharField(max_length=100),
         ),
         migrations.AlterField(
-            model_name='auditlog',
-            name='user',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='audit_logs', to=settings.AUTH_USER_MODEL),
+            model_name="auditlog",
+            name="user",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="audit_logs",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AddIndex(
-            model_name='auditlog',
-            index=models.Index(fields=['entity_type', 'entity_id'], name='audit_audit_entity__9535bf_idx'),
+            model_name="auditlog",
+            index=models.Index(
+                fields=["entity_type", "entity_id"],
+                name="audit_audit_entity__9535bf_idx",
+            ),
         ),
         migrations.AddIndex(
-            model_name='auditlog',
-            index=models.Index(fields=['application'], name='audit_audit_applica_a2c757_idx'),
+            model_name="auditlog",
+            index=models.Index(
+                fields=["application"], name="audit_audit_applica_a2c757_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='auditlog',
-            index=models.Index(fields=['created_at'], name='audit_audit_created_2c1626_idx'),
+            model_name="auditlog",
+            index=models.Index(
+                fields=["created_at"], name="audit_audit_created_2c1626_idx"
+            ),
         ),
     ]

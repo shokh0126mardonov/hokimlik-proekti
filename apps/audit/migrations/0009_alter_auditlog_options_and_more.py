@@ -4,26 +4,25 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('audit', '0008_alter_auditlog_action_alter_auditlog_entity_id_and_more'),
+        ("audit", "0008_alter_auditlog_action_alter_auditlog_entity_id_and_more"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='auditlog',
-            options={'ordering': ['-pk']},
+            name="auditlog",
+            options={"ordering": ["-pk"]},
         ),
         migrations.RemoveIndex(
-            model_name='auditlog',
-            name='audit_audit_entity__9535bf_idx',
+            model_name="auditlog",
+            name="audit_audit_entity__9535bf_idx",
         ),
         migrations.RemoveIndex(
-            model_name='auditlog',
-            name='audit_audit_applica_a2c757_idx',
+            model_name="auditlog",
+            name="audit_audit_applica_a2c757_idx",
         ),
         migrations.RemoveIndex(
-            model_name='auditlog',
-            name='audit_audit_created_2c1626_idx',
+            model_name="auditlog",
+            name="audit_audit_created_2c1626_idx",
         ),
     ]

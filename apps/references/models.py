@@ -8,21 +8,21 @@ class Service(models.Model):
 
     def __str__(self):
         return f"{self.pk} {self.name}"
-    
+
     class Meta:
-        ordering = ['-pk']
+        ordering = ["-pk"]
 
 
 class Mahalla(models.Model):
     name = models.CharField(max_length=200)
-    district = models.CharField(max_length=200,null=True,blank=True)
+    district = models.CharField(max_length=200, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.pk} {self.name}"
-    
+
     class Meta:
-        ordering = ['-pk']
+        ordering = ["-pk"]
 
 
 class ApplicationType(models.Model):
@@ -30,6 +30,6 @@ class ApplicationType(models.Model):
 
     def __str__(self):
         return f"{self.pk} {self.name}"
-    
+
     class Meta:
-        ordering = ['-pk']
+        ordering = ["-pk"]

@@ -14,8 +14,9 @@ from django.core.files.base import ContentFile
 from apps.accounts.models import User
 from apps.applications.models import Application, MahallaReport, Attachment
 from apps.applications.serializers import AplicationSendBotSerializers
-from ..buttons.murojat import  murojat_organdim_button
+from ..buttons.murojat import murojat_organdim_button
 from ..buttons.murojat import skip_file_button
+
 # STATES
 ASK_COMMENT = 1
 ASK_FILE = 2
@@ -25,9 +26,11 @@ ASK_FILE = 2
 # DB HELPERS
 # =========================
 
+
 @sync_to_async
 def get_application(app_id):
     return Application.objects.get(id=app_id)
+
 
 @sync_to_async
 def get_user(telegram_id):
@@ -43,6 +46,7 @@ def update_application_status(application_id, status):
 # ENTRY POINT
 # =========================
 
+
 async def handle_status_actions(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -56,38 +60,27 @@ async def handle_status_actions(update: Update, context: ContextTypes.DEFAULT_TY
         except IndexError:
             await query.message.reply_text("❌ Xatolik")
             return ConversationHandler.END
-        
-        
-
 
         aplication = await get_application(app_id)
         data = AplicationSendBotSerializers(aplication).data
         message = (
             f"<b>📄 Ariza №:</b> #{data.get('app_number')}\n"
             f"━━━━━━━━━━━━━━━━━━━\n\n"
-
             f"📝 <b>Murojaat turi:</b>\n"
             f"{data.get('content')}\n\n"
-
             f"👤 <b>Fuqaro:</b>\n"
             f"{data.get('citizen_name')}\n\n"
-
             f"📞 <b>Telefon:</b>\n"
             f"{data.get('citizen_phone') or '—'}\n\n"
-
             f"📍 <b>Manzil:</b>\n"
             f"{data.get('address_text')}\n\n"
-
             f"⏳ <b>Muddati:</b>\n"
             f"{data.get('deadline') or '—'}\n\n"
-
             f"🕒 <b>Yaratilgan sana:</b>\n"
             f"{data.get('created_at')}\n\n"
-
             f"━━━━━━━━━━━━━━━━━━━\n"
             f"<i>📌 Iltimos, murojaatni ko‘rib chiqing</i>"
         )
-
 
         await query.edit_message_text(
             message,
@@ -97,7 +90,6 @@ async def handle_status_actions(update: Update, context: ContextTypes.DEFAULT_TY
         await update_application_status(app_id, Application.Status.ACKNOWLEDGED)
 
         return ConversationHandler.END
-
 
     # O‘RGANDIM → FLOW
     elif data.startswith("murojat_organdim_"):
@@ -129,6 +121,7 @@ async def handle_status_actions(update: Update, context: ContextTypes.DEFAULT_TY
 # COMMENT STEP
 # =========================
 
+
 async def save_comment(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text:
         await update.message.reply_text("❌ Matn yuboring")
@@ -144,7 +137,9 @@ async def save_comment(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["comment"] = update.message.text.strip()
     context.user_data["message_id"] = update.message.message_id
 
-    await update.message.reply_text("📎 Endi fayl yuboring:",reply_markup=skip_file_button())
+    await update.message.reply_text(
+        "📎 Endi fayl yuboring:", reply_markup=skip_file_button()
+    )
 
     return ASK_FILE
 
@@ -152,6 +147,7 @@ async def save_comment(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # =========================
 # FILE STEP + FINAL SAVE
 # =========================
+
 
 async def handle_file_upload(update: Update, context: ContextTypes.DEFAULT_TYPE):
     app_id = context.user_data.get("app_id")

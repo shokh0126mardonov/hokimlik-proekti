@@ -1,4 +1,3 @@
-
 from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework.viewsets import ModelViewSet
@@ -12,25 +11,24 @@ from rest_framework.generics import CreateAPIView
 from apps.audit.views import AuditMixin
 from .models import User
 from .permissions import Is_SuperAdmin
-from .serializers import UserSerializer,RegisterSerializers,OqsoqolAddSerializers
+from .serializers import UserSerializer, RegisterSerializers, OqsoqolAddSerializers
 
 from django.db import IntegrityError
 
-class UserCrudVievSet(AuditMixin,ModelViewSet):
 
+class UserCrudVievSet(AuditMixin, ModelViewSet):
     authentication_classes = [JWTAuthentication]
-    queryset = User.objects.filter(is_active = True).all()
-    permission_classes = [IsAuthenticated,Is_SuperAdmin]
+    queryset = User.objects.filter(is_active=True).all()
+    permission_classes = [IsAuthenticated, Is_SuperAdmin]
 
     def get_serializer_class(self):
-        if self.action in ['create',"partial_update"]:
+        if self.action in ["create", "partial_update"]:
             return RegisterSerializers
         elif self.action == "list":
             return UserSerializer
         else:
             return UserSerializer
-        
-    
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -54,24 +52,24 @@ class UserCrudVievSet(AuditMixin,ModelViewSet):
                     if role == "super_admin":
                         return Response(
                             {"role": ["Super admin already exists"]},
-                            status=status.HTTP_400_BAD_REQUEST
+                            status=status.HTTP_400_BAD_REQUEST,
                         )
                     elif role == "hokim":
                         return Response(
                             {"role": ["Hokim already exists"]},
-                            status=status.HTTP_400_BAD_REQUEST
+                            status=status.HTTP_400_BAD_REQUEST,
                         )
 
             return Response(
                 {"detail": "Database constraint error"},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         data = serializer.data
         data.pop("password", None)
 
         return Response(data, status=status.HTTP_201_CREATED)
-    
+
     def perform_update(self, serializer):
         instance = self.get_object()
 
@@ -88,6 +86,7 @@ class UserCrudVievSet(AuditMixin,ModelViewSet):
         if password:
             user.set_password(password)
             user.save(update_fields=["password"])
+
 
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.response import Response
@@ -106,13 +105,15 @@ class LoginView(TokenObtainPairView):
 
         refresh = RefreshToken.for_user(user)
 
-        return Response({
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-            'role': user.role,
-            'id': user.id,
-            "service": getattr(user.service, "id", None)  
-        })
+        return Response(
+            {
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
+                "role": user.role,
+                "id": user.id,
+                "service": getattr(user.service, "id", None),
+            }
+        )
 
 
 from rest_framework.generics import CreateAPIView
@@ -120,6 +121,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.db import transaction
 import json
+
 
 class AddOqsoqol(AuditMixin, CreateAPIView):
     authentication_classes = [JWTAuthentication]
@@ -130,12 +132,9 @@ class AddOqsoqol(AuditMixin, CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        file = serializer.validated_data['file']
+        file = serializer.validated_data["file"]
 
         # if not file.name.lower().endswith('.json'):
         #     return Response("json file yuboring",400)
-
-        
-        
 
         return Response({"detail": "Oqsoqollar muvaffaqiyatli qo‘shildi"}, status=201)

@@ -12,9 +12,7 @@ async def murojat_bot(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = await user_status(telegram_id)
 
     # ✅ FIX 1
-    if  user:
-
-
+    if user:
         data = await murojat_comand_service(user.id)
 
         sent = data.get("sent", [])
@@ -31,15 +29,14 @@ async def murojat_bot(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # =========================
         if sent:
             await update.message.reply_text(
-                "📨 <b>Yangi murojaatlar</b>",
-                parse_mode="HTML"
+                "📨 <b>Yangi murojaatlar</b>", parse_mode="HTML"
             )
 
             for item in sent:
-                app_number = str(item.get('app_number') or '')
-                service = html.escape(str(item.get('service') or ''))
-                citizen_name = html.escape(str(item.get('citizen_name') or ''))
-                address_text = html.escape(str(item.get('address_text') or ''))
+                app_number = str(item.get("app_number") or "")
+                service = html.escape(str(item.get("service") or ""))
+                citizen_name = html.escape(str(item.get("citizen_name") or ""))
+                address_text = html.escape(str(item.get("address_text") or ""))
 
                 message = (
                     f"<b>📄 Ariza:</b> #{app_number}\n"
@@ -50,8 +47,8 @@ async def murojat_bot(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 await update.message.reply_text(
                     message,
-                    reply_markup=murojat_button(item.get('id')),
-                    parse_mode="HTML"
+                    reply_markup=murojat_button(item.get("id")),
+                    parse_mode="HTML",
                 )
 
         # =========================
@@ -59,15 +56,14 @@ async def murojat_bot(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # =========================
         if reopened:
             await update.message.reply_text(
-                "♻️ <b>Qayta ochilgan murojaatlar</b>",
-                parse_mode="HTML"
+                "♻️ <b>Qayta ochilgan murojaatlar</b>", parse_mode="HTML"
             )
 
             for item in reopened:
-                app_number = str(item.get('app_number') or '')
-                service = html.escape(str(item.get('service') or ''))
-                citizen_name = html.escape(str(item.get('citizen_name') or ''))
-                address_text = html.escape(str(item.get('address_text') or ''))
+                app_number = str(item.get("app_number") or "")
+                service = html.escape(str(item.get("service") or ""))
+                citizen_name = html.escape(str(item.get("citizen_name") or ""))
+                address_text = html.escape(str(item.get("address_text") or ""))
 
                 message = (
                     f"<b>📄 Ariza:</b> #{app_number}\n"
@@ -78,23 +74,22 @@ async def murojat_bot(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 await update.message.reply_text(
                     message,
-                    reply_markup=murojat_button(item.get('id')),
-                    parse_mode="HTML"
+                    reply_markup=murojat_button(item.get("id")),
+                    parse_mode="HTML",
                 )
         # =========================
         # ACKNOWLEDGED
         # =========================
-        if acknowledged:    
+        if acknowledged:
             await update.message.reply_text(
-                "✅ <b>Ko'rilgan murojaatlar</b>",
-                parse_mode="HTML"
+                "✅ <b>Ko'rilgan murojaatlar</b>", parse_mode="HTML"
             )
 
             for item in acknowledged:
-                app_number = str(item.get('app_number') or '')
-                service = html.escape(str(item.get('service') or ''))
-                citizen_name = html.escape(str(item.get('citizen_name') or ''))
-                address_text = html.escape(str(item.get('address_text') or ''))
+                app_number = str(item.get("app_number") or "")
+                service = html.escape(str(item.get("service") or ""))
+                citizen_name = html.escape(str(item.get("citizen_name") or ""))
+                address_text = html.escape(str(item.get("address_text") or ""))
 
                 message = (
                     f"<b>📄 Ariza:</b> #{app_number}\n"
@@ -105,6 +100,6 @@ async def murojat_bot(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 await update.message.reply_text(
                     message,
-                    reply_markup=murojat_organdim_button(item.get('id')),
-                    parse_mode="HTML"
+                    reply_markup=murojat_organdim_button(item.get("id")),
+                    parse_mode="HTML",
                 )

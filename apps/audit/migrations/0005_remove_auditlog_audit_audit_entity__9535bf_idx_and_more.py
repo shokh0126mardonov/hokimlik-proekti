@@ -6,53 +6,62 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('applications', '0003_alter_mahallareport_action_type'),
-        ('audit', '0004_remove_auditlog_aplications_auditlog_application_and_more'),
+        ("applications", "0003_alter_mahallareport_action_type"),
+        ("audit", "0004_remove_auditlog_aplications_auditlog_application_and_more"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.RemoveIndex(
-            model_name='auditlog',
-            name='audit_audit_entity__9535bf_idx',
+            model_name="auditlog",
+            name="audit_audit_entity__9535bf_idx",
         ),
         migrations.RemoveIndex(
-            model_name='auditlog',
-            name='audit_audit_applica_a2c757_idx',
+            model_name="auditlog",
+            name="audit_audit_applica_a2c757_idx",
         ),
         migrations.RemoveIndex(
-            model_name='auditlog',
-            name='audit_audit_created_2c1626_idx',
+            model_name="auditlog",
+            name="audit_audit_created_2c1626_idx",
         ),
         migrations.AddField(
-            model_name='auditlog',
-            name='aplications',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='applications.application'),
+            model_name="auditlog",
+            name="aplications",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to="applications.application",
+            ),
         ),
         migrations.AlterField(
-            model_name='auditlog',
-            name='action',
+            model_name="auditlog",
+            name="action",
             field=models.CharField(max_length=50),
         ),
         migrations.AlterField(
-            model_name='auditlog',
-            name='entity_id',
+            model_name="auditlog",
+            name="entity_id",
             field=models.CharField(),
         ),
         migrations.AlterField(
-            model_name='auditlog',
-            name='entity_type',
+            model_name="auditlog",
+            name="entity_type",
             field=models.CharField(max_length=50),
         ),
         migrations.AlterField(
-            model_name='auditlog',
-            name='user',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL),
+            model_name="auditlog",
+            name="user",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.RemoveField(
-            model_name='auditlog',
-            name='application',
+            model_name="auditlog",
+            name="application",
         ),
     ]

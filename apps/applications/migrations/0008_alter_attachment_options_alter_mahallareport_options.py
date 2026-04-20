@@ -4,18 +4,17 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('applications', '0007_alter_application_status'),
+        ("applications", "0007_alter_application_status"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='attachment',
-            options={'ordering': ['-pk']},
+            name="attachment",
+            options={"ordering": ["-pk"]},
         ),
         migrations.AlterModelOptions(
-            name='mahallareport',
-            options={'ordering': ['-pk']},
+            name="mahallareport",
+            options={"ordering": ["-pk"]},
         ),
     ]

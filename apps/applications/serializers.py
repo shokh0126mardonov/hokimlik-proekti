@@ -4,13 +4,13 @@ from rest_framework import serializers
 
 from apps.references.models import Service
 from apps.accounts.models import User
-from .models import Application,Attachment,MahallaReport
+from .models import Application, Attachment, MahallaReport
+
 
 class AplicationSerializers(serializers.ModelSerializer):
-
     class Meta:
         model = Application
-        fields = '__all__'
+        fields = "__all__"
 
 
 class SendMahallaSerialisers(serializers.Serializer):
@@ -18,58 +18,74 @@ class SendMahallaSerialisers(serializers.Serializer):
 
 
 class AttachmentSerializers(serializers.Serializer):
-    report = serializers.PrimaryKeyRelatedField(
-        queryset=MahallaReport.objects.all()
-    )
+    report = serializers.PrimaryKeyRelatedField(queryset=MahallaReport.objects.all())
     file = serializers.FileField()
 
     def create(self, validated_data):
-        file_obj = validated_data['file']
+        file_obj = validated_data["file"]
         ext = os.path.splitext(file_obj.name)[1].lower()
 
-
         return Attachment.objects.create(
-            report=validated_data['report'],
-            application=validated_data.get('application'),
-            uploaded_by=validated_data.get('uploaded_by'),
-            file_type = ext ,
+            report=validated_data["report"],
+            application=validated_data.get("application"),
+            uploaded_by=validated_data.get("uploaded_by"),
+            file_type=ext,
             file=file_obj,
-            file_size=file_obj.size, 
+            file_size=file_obj.size,
         )
 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['username','full_name','role']
+        fields = ["username", "full_name", "role"]
+
 
 class AttachmentResponseSerializers(serializers.ModelSerializer):
-    uploaded_by = UserSerializer(read_only = True)
+    uploaded_by = UserSerializer(read_only=True)
+
     class Meta:
         model = Attachment
         fields = [
-            'report','application','file','file_type','file_size','uploaded_by','created_at'
+            "report",
+            "application",
+            "file",
+            "file_type",
+            "file_size",
+            "uploaded_by",
+            "created_at",
         ]
-    
+
 
 class MahallaRepostSerializers(serializers.ModelSerializer):
     oqsoqol = UserSerializer(read_only=True)
+
     class Meta:
         model = MahallaReport
-        fields = ['id','action_type','comment_text','telegram_message_id','created_at','application','oqsoqol']
+        fields = [
+            "id",
+            "action_type",
+            "comment_text",
+            "telegram_message_id",
+            "created_at",
+            "application",
+            "oqsoqol",
+        ]
 
-    
+
 class AplicationSendBotSerializers(serializers.Serializer):
     id = serializers.IntegerField()
     app_number = serializers.CharField(max_length=30)
-    service = serializers.PrimaryKeyRelatedField(source="Service.name",read_only=True)  
-    app_type = serializers.PrimaryKeyRelatedField(source="ApplicationType.name", read_only=True)  
+    service = serializers.PrimaryKeyRelatedField(source="Service.name", read_only=True)
+    app_type = serializers.PrimaryKeyRelatedField(
+        source="ApplicationType.name", read_only=True
+    )
 
     content = serializers.CharField()
-    citizen_name = serializers.CharField(max_length = 200)
+    citizen_name = serializers.CharField(max_length=200)
     citizen_phone = serializers.CharField(max_length=20)
     address_text = serializers.CharField(max_length=500)
-    mahalla = serializers.PrimaryKeyRelatedField(source="Mahalla.name", read_only=True)  
+    mahalla = serializers.PrimaryKeyRelatedField(source="Mahalla.name", read_only=True)
     deadline = serializers.DateField(format="%Y-%m-%d")
     address_text = serializers.CharField(max_length=500)
     created_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
@@ -78,4 +94,4 @@ class AplicationSendBotSerializers(serializers.Serializer):
 class AplicationUpdateSerializers(serializers.ModelSerializer):
     class Meta:
         model = Application
-        exclude = ['status']
+        exclude = ["status"]

@@ -4,15 +4,21 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('applications', '0002_alter_application_options_and_more'),
+        ("applications", "0002_alter_application_options_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='mahallareport',
-            name='action_type',
-            field=models.CharField(choices=[('acknowledged', 'Qabul qilindi'), ('inspected', 'Tekshirildi'), ('commented', 'Izoh qoldirildi')], max_length=20),
+            model_name="mahallareport",
+            name="action_type",
+            field=models.CharField(
+                choices=[
+                    ("acknowledged", "Qabul qilindi"),
+                    ("inspected", "Tekshirildi"),
+                    ("commented", "Izoh qoldirildi"),
+                ],
+                max_length=20,
+            ),
         ),
     ]

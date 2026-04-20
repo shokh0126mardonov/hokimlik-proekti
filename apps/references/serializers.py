@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
-from .models import Mahalla, Service,ApplicationType
+from .models import Mahalla, Service, ApplicationType
+
 
 class MahallaSerializers(serializers.ModelSerializer):
     class Meta:
