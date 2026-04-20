@@ -12,13 +12,13 @@ from .views import (
     MahallaRepost,
     DashboardSummaryAPIView,
     OqsoqolActivityAPIView,
-    DownloadAttachmentAPIView
+    DownloadAttachmentAPIView,
 )
 
 
 router = DefaultRouter()
-router.register(r'applications', ApplicationViewSets, basename='applications')
-router.register(r'preview-pdf',ApplicationViewSets,basename='aplications1')
+router.register(r"applications", ApplicationViewSets, basename="applications")
+router.register(r"preview-pdf", ApplicationViewSets, basename="aplications1")
 
 
 urlpatterns = [
@@ -49,7 +49,7 @@ urlpatterns = [
     # Dashboard Statistika
     path("dashboard/summary/", DashboardSummaryAPIView.as_view()),
     path("dashboard/oqsoqol-activity/<int:pk>/", OqsoqolActivityAPIView.as_view()),
-# urls.py
+    # urls.py
 ]
 
 urlpatterns += router.urls

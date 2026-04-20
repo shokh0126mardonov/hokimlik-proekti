@@ -43,7 +43,6 @@ class ApplicationViewSets(AuditMixin, ModelViewSet):
     authentication_classes = [JWTAuthentication]
     pagination_class = CustomPagination
 
-
     @action(detail=True, methods=["get"], url_path="attachments-to-pdf")
     def attachments_to_pdf(self, request, pk=None):
         application = self.get_object()
@@ -58,24 +57,21 @@ class ApplicationViewSets(AuditMixin, ModelViewSet):
 
         # 🔹 pdf path
         pdf_path = os.path.join(
-            settings.MEDIA_ROOT,
-            "pdfs",
-            f"app_{application.id}.pdf"
+            settings.MEDIA_ROOT, "pdfs", f"app_{application.id}.pdf"
         )
 
-        # 🔥 SERVICE chaqiramiz (object yuboramiz)
         generate_application_pdf(
             application=application,
             report=report,
             attachments=attachments,
-            output_path=pdf_path
+            output_path=pdf_path,
         )
 
         return FileResponse(
             open(pdf_path, "rb"),
             content_type="application/pdf",
             as_attachment=True,
-            filename=f"application_{application.id}.pdf"
+            filename=f"application_{application.id}.pdf",
         )
 
     def get_permissions(self):
@@ -336,6 +332,7 @@ class OqsoqolActivityAPIView(APIView):
             }
         )
 
+
 import os
 from django.http import FileResponse, Http404
 from django.conf import settings
@@ -343,7 +340,6 @@ from rest_framework.views import APIView
 
 
 class DownloadAttachmentAPIView(APIView):
-
     def get(self, request, pk):
         from .models import Attachment
 
@@ -360,5 +356,5 @@ class DownloadAttachmentAPIView(APIView):
         return FileResponse(
             open(file_path, "rb"),
             as_attachment=True,
-            filename=os.path.basename(file_path)
+            filename=os.path.basename(file_path),
         )

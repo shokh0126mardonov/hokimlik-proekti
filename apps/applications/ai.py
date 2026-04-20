@@ -8,7 +8,7 @@ from reportlab.platypus import (
     Spacer,
     Image as RLImage,
     Table,
-    TableStyle
+    TableStyle,
 )
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -26,18 +26,11 @@ def generate_application_pdf(application, report, attachments, output_path):
 
     # 🔹 Styles
     center_style = ParagraphStyle(
-        name="Center",
-        parent=styles["Normal"],
-        alignment=1,
-        fontSize=12,
-        spaceAfter=5
+        name="Center", parent=styles["Normal"], alignment=1, fontSize=12, spaceAfter=5
     )
 
     title_style = ParagraphStyle(
-        name="Title",
-        parent=styles["Title"],
-        alignment=1,
-        spaceAfter=20
+        name="Title", parent=styles["Title"], alignment=1, spaceAfter=20
     )
 
     elements = []
@@ -48,7 +41,7 @@ def generate_application_pdf(application, report, attachments, output_path):
     elements.append(
         Paragraph(
             f"{application.mahalla.name if application.mahalla else ''} MAHALLASI",
-            center_style
+            center_style,
         )
     )
 
@@ -65,10 +58,14 @@ def generate_application_pdf(application, report, attachments, output_path):
     ]
 
     table = Table(table_data, colWidths=[130, 330])
-    table.setStyle(TableStyle([
-        ("BOX", (0, 0), (-1, -1), 1, colors.black),
-        ("INNERGRID", (0, 0), (-1, -1), 0.5, colors.grey),
-    ]))
+    table.setStyle(
+        TableStyle(
+            [
+                ("BOX", (0, 0), (-1, -1), 1, colors.black),
+                ("INNERGRID", (0, 0), (-1, -1), 0.5, colors.grey),
+            ]
+        )
+    )
 
     elements.append(table)
     elements.append(Spacer(1, 20))
@@ -79,10 +76,7 @@ def generate_application_pdf(application, report, attachments, output_path):
     elements.append(Spacer(1, 20))
 
     # ================= REPORT =================
-    oqsoqol_name = (
-        report.oqsoqol.username
-        if report and report.oqsoqol else "-"
-    )
+    oqsoqol_name = report.oqsoqol.username if report and report.oqsoqol else "-"
 
     comment = report.comment_text if report else "Izoh yo‘q"
 
@@ -90,19 +84,22 @@ def generate_application_pdf(application, report, attachments, output_path):
     elements.append(Paragraph(f"Oqsoqol: <b>{oqsoqol_name}</b>", styles["Normal"]))
     elements.append(
         Paragraph(
-            f"Sana: {report.created_at.date() if report else '-'}",
-            styles["Normal"]
+            f"Sana: {report.created_at.date() if report else '-'}", styles["Normal"]
         )
     )
     elements.append(Spacer(1, 10))
 
     # 🔹 Izoh box
     comment_table = Table([[comment]], colWidths=[460])
-    comment_table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, -1), colors.whitesmoke),
-        ("BOX", (0, 0), (-1, -1), 1, colors.black),
-        ("PADDING", (0, 0), (-1, -1), 10),
-    ]))
+    comment_table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, -1), colors.whitesmoke),
+                ("BOX", (0, 0), (-1, -1), 1, colors.black),
+                ("PADDING", (0, 0), (-1, -1), 10),
+            ]
+        )
+    )
 
     elements.append(comment_table)
     elements.append(Spacer(1, 20))
@@ -133,7 +130,7 @@ def generate_application_pdf(application, report, attachments, output_path):
                 elements.append(
                     Paragraph(
                         f'<a href="{download_url}">📎 Faylni yuklab olish</a>',
-                        styles["Normal"]
+                        styles["Normal"],
                     )
                 )
                 elements.append(Spacer(1, 10))
