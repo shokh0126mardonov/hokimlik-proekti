@@ -34,7 +34,7 @@ class AttachmentSerializers(serializers.Serializer):
             uploaded_by=validated_data.get('uploaded_by'),
             file_type = ext ,
             file=file_obj,
-            file_size=file_obj.size,  # 🔥 MUHIM
+            file_size=file_obj.size, 
         )
 
 

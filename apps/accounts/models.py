@@ -1,6 +1,8 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models import Q
+from phonenumber_field.modelfields import PhoneNumberField
+
 
 
 class User(AbstractUser):
@@ -11,7 +13,7 @@ class User(AbstractUser):
         OQSOQOL = "oqsoqol", "Oqsoqol"
 
     full_name = models.CharField(max_length=200)
-    phone = models.CharField(max_length=20, blank=True,null=True,unique=True)
+    phone = PhoneNumberField(unique=True)
 
     role = models.CharField(max_length=20, choices=Role.choices)
 
