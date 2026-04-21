@@ -47,15 +47,12 @@ class ApplicationViewSets(AuditMixin, ModelViewSet):
     def attachments_to_pdf(self, request, pk=None):
         application = self.get_object()
 
-        # 🔹 latest report
         report = application.reports.first()
 
-        # 🔹 barcha attachmentlar (application + report)
         attachments = Attachment.objects.filter(
             Q(application=application) | Q(report=report)
         )
 
-        # 🔹 pdf path
         pdf_path = os.path.join(
             settings.MEDIA_ROOT, "pdfs", f"app_{application.id}.pdf"
         )

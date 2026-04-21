@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "apps.accounts.apps.AccountsConfig",
     "apps.audit.apps.AuditConfig",
+    'apps.analytics',
     "apps.applications.apps.ApplicationsConfig",
     "apps.references.apps.ReferencesConfig",
     "rest_framework",

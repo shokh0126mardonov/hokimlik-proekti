@@ -18,7 +18,7 @@ from .views import (
 
 router = DefaultRouter()
 router.register(r"applications", ApplicationViewSets, basename="applications")
-router.register(r"preview-pdf", ApplicationViewSets, basename="aplications1")
+# router.register(r"preview-pdf", ApplicationViewSets, basename="aplications1")
 
 
 urlpatterns = [
