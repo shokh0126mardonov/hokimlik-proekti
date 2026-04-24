@@ -96,6 +96,11 @@ class Application(models.Model):
     class Meta:
         verbose_name = "Arizalar"
         ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["created_at"]),
+            models.Index(fields=["closed_at"]),
+            models.Index(fields=["service"]),
+        ]
 
 
 class MahallaReport(models.Model):
