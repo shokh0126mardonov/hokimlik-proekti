@@ -191,7 +191,7 @@ class AplicationStatus(AuditMixin, ModelViewSet):
 
     @action(detail=True, methods=["post"], url_path="archive")
     def archive(self, request: Request, pk):
-        aplication = Application.objects.get(pk=pk)
+        aplication = get_object_or_404(Application,pk=pk)
         aplication.status = "archived"
 
         aplication.save(update_fields=["status"])
@@ -200,7 +200,7 @@ class AplicationStatus(AuditMixin, ModelViewSet):
 
     @action(detail=True, methods=["post"], url_path="close")
     def close(self, request: Request, pk):
-        aplication = Application.objects.get(pk=pk)
+        aplication = get_object_or_404(Application,pk=pk)
         aplication.status = "closed"
         aplication.closed_at = timezone.now()
         aplication.save(update_fields=["status", "closed_at"])
@@ -209,7 +209,7 @@ class AplicationStatus(AuditMixin, ModelViewSet):
 
     @action(detail=True, methods=["post"], url_path="reopen")
     def reopen(self, request: Request, pk):
-        aplication = Application.objects.get(pk=pk)
+        aplication = get_object_or_404(Application,pk=pk)
         aplication.status = aplication.Status.REOPENED
 
         users = User.objects.filter(
