@@ -123,7 +123,7 @@ from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, JSONParser
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAuthenticated
 from django.db import transaction
 from .models import User
 
@@ -134,7 +134,7 @@ def generate_password(length=12):
 
 
 class ImportOqsoqolView(APIView):
-    permission_classes = [Is_SuperAdmin]
+    permission_classes = [IsAuthenticated,Is_SuperAdmin]
     parser_classes = [MultiPartParser, JSONParser]
 
     def post(self, request):
@@ -149,7 +149,6 @@ class ImportOqsoqolView(APIView):
         else:
             items = request.data
 
-        # 2) Bitta obyekt kelsa ham, listga o'rab olamiz
         if isinstance(items, dict):
             items = [items]
 
@@ -162,7 +161,6 @@ class ImportOqsoqolView(APIView):
         created, skipped, errors = 0, 0, []
         created_users = []
 
-        # 3) Har bir elementni qayta ishlash
         for i, item in enumerate(items):
             try:
                 username = item.get("username")

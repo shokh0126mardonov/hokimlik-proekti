@@ -21,5 +21,5 @@ urlpatterns = [
         ),
     ),
 
-    path('add-oqsoqol/',ImportOqsoqolView.as_view())
+    path('add-oqsoqol-json/',ImportOqsoqolView.as_view())
 ]
