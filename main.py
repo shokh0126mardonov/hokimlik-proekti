@@ -10,13 +10,19 @@ from telegram.ext import (
 from handlers.utils import StepAplications
 from decouple import config
 
-
+# Barcha kerakli handlerlarni import qilish
 from handlers import (
     start_bot,
     murojat_bot,
     help_command_bot,
     statistic_command_bot,
-    get_full_name,get_average_age,get_mahalla,get_text,confirm_application,cancel,ariza_yuborish
+    get_full_name,
+    get_average_age,
+    get_mahalla,
+    get_text,
+    confirm_application,
+    cancel,
+    ariza_yuborish
 )
 
 from handlers.service.aplication_service import (
@@ -40,47 +46,23 @@ def main():
     application.add_handler(CommandHandler("murojatlar", murojat_bot))
     application.add_handler(CommandHandler("yordam", help_command_bot))
     application.add_handler(CommandHandler("statistika", statistic_command_bot))
-    # application.add_handler(CommandHandler("ariza", ariza_yuborish))
 
-    # application.add_handler(MessageHandler(filters.CONTACT, get_contact))
     application_conversetion = ConversationHandler(
         entry_points=[
-            # Yangi foydalanuvchi kontakt yuborganida ro'yxatdan o'tish boshlanadi
             MessageHandler(filters.CONTACT, get_contact),
-            # ✅ Oldin ro'yxatdan o'tgan foydalanuvchi /ariza komandasini bossa zanjir shu yerda boshlanadi
             CommandHandler("ariza", ariza_yuborish) 
         ],
         states={
             StepAplications.FULL_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_full_name)],
             StepAplications.MAHALLA: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_mahalla)],
-            # Kodingizda get_mahalla funksiyasi AVEREGE_AGE emas, AVERAGE_AGE qaytargani ma'qul, imloga qarab o'nglab oling
             StepAplications.AVEREGE_AGE: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_average_age)],
             StepAplications.TEXT: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_text)],
             StepAplications.CONFIRM: [MessageHandler(filters.TEXT & ~filters.COMMAND, confirm_application)],
         },
         fallbacks=[CommandHandler('cancel', cancel)],
         allow_reentry=True,
-        per_message=False # State'lar xavfsiz almashishi uchun qo'shildi
+        per_message=False  # ✅ Bu False bo'lgani ma'qul, aks holda CallbackQuery'lar bilan xato berishi mumkin
     )
-
-    application.add_handler(application_conversetion)
-
-    application_conv = ConversationHandler(
-    entry_points=[
-        MessageHandler(filters.CONTACT, get_contact)
-    ],
-    states={
-        StepAplications.FULL_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_full_name)],
-        StepAplications.MAHALLA: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_mahalla)],
-        StepAplications.AVEREGE_AGE: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_average_age)],
-        StepAplications.TEXT: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_text)],
-        StepAplications.CONFIRM: [MessageHandler(filters.TEXT & ~filters.COMMAND, confirm_application)],
-    },
-    fallbacks=[CommandHandler('cancel', cancel)],
-    allow_reentry=True
-)
-
-    
     
     conversation = ConversationHandler(
         entry_points=[
@@ -106,9 +88,12 @@ def main():
         allow_reentry=True
     )
 
-    application.add_handler(application_conv)
+    # Handlerlarni botga qo'shamiz (Faqat keraklilari)
+    application.add_handler(application_conversetion)
     application.add_handler(conversation)
 
+    # Botni ishga tushirish
+    print("Bot muvaffaqiyatli ishga tushdi...")
     application.run_polling(
         allowed_updates=Update.ALL_TYPES,
         drop_pending_updates=True,

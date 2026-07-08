@@ -5,7 +5,6 @@ from telegram import Update, ReplyKeyboardRemove, ReplyKeyboardMarkup
 from telegram.ext import ContextTypes, ConversationHandler
 from asgiref.sync import sync_to_async
 
-# Modellar va Steplarni to'g'ri import yo'llari bilan yuklaymiz
 from handlers.utils import StepAplications
 from apps.applications.models import Application
 from apps.references.models import Mahalla
@@ -63,7 +62,7 @@ async def get_mahalla(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Yosh toifangizni tanlang:",
         reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True)
     )
-    return StepAplications.AVERAGE_AGE
+    return StepAplications.AVEREGE_AGE
 
 
 async def get_average_age(update: Update, context: ContextTypes.DEFAULT_TYPE):

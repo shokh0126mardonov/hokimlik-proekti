@@ -30,56 +30,64 @@ def user_contact_service(user_id: int, phone_number: str):
     user.save(update_fields=["phone", "telegram_id"])
     return user.id
 
-
 async def get_contact(update: Update, context: ContextTypes.DEFAULT_TYPE):
     contact = update.message.contact
-    context.user_data['contact'] = contact
-
+    
     if not contact:
         await update.message.reply_text(
-            "Iltimos, telefon raqamingizni pasdagi tugma orqali ulashing."
+            "Iltimos, telefon raqamingizni pastdagi tugma orqali ulashing."
         )
-        return
+        return  # State o'zgarmaydi, qayta kontakt kutadi
 
+    # 2. Begona raqam yuborilmaganini tekshirish
     if contact.user_id != update.message.from_user.id:
         await update.message.reply_text(
             "Iltimos, o'zingizning telefon raqamingizni ulashing."
         )
-        return
+        return  # State o'zgarmaydi
 
+    # Kontakt ma'lumotlarini xavfsiz saqlash
+    context.user_data['contact'] = contact
     phone_number = normalize_last9(contact.phone_number)
+    context.user_data['phone_number'] = phone_number
 
-    user_id = await user_contact_service(
-        user_id=update.message.from_user.id, phone_number=phone_number
-    )
+    telegram_id = update.message.from_user.id
 
-    if user_id:
+    # Bazadan arizachini tekshirish (Query)
+    @sync_to_async
+    def check_applicant():
+        return Applicant.objects.filter(telegram_id=telegram_id).select_related('mahalla').first()
+        
+    applicant_exists = await check_applicant()
+
+    if applicant_exists:
+        context.user_data['full_name'] = applicant_exists.full_name
+        context.user_data['mahalla'] = applicant_exists.mahalla.name if applicant_exists.mahalla else None
+        
+        # Sifatiy yosh toifasini saqlash
+        if applicant_exists.age_medium == '30_plus':
+            context.user_data['average_age'] = '30 yoshdan katta'
+        else:
+            context.user_data['average_age'] = '30 yoshdan kichik'
+        
         await update.message.reply_text(
-            f"✅ Raqamingiz tasdiqlandi: {phone_number}",
-            reply_markup=ReplyKeyboardRemove(),
+            # f"✅ Raqamingiz tasdiqlandi: {phone_number}\n\n"
+            f"✍️ Iltimos, yangi arizangiz yoki murojaatingiz matnini batafsil yozib yuboring:",
+            reply_markup=ReplyKeyboardRemove()
         )
+        # To'g'ridan-to'g'ri ariza matnini yozish bosqichiga o'tkazamiz
+        return StepAplications.TEXT 
+
     else:
-        telegram_id = update.message.from_user.id
-        
-        @sync_to_async
-        def check_applicant():
-            return Applicant.objects.filter(telegram_id=telegram_id).select_related('mahalla').first()
-            
-        applicant_exists = await check_applicant()
-        
-        if applicant_exists:
-            # 🔴 MANA SHU YERDA CONTEXT'NI TO'LDIRIB KETISH SHART:
-            context.user_data['full_name'] = applicant_exists.full_name
-            context.user_data['mahalla'] = applicant_exists.mahalla.name if applicant_exists.mahalla else None
-            
-            # Yosh toifasini modelda qanday saqlanganiga qarab chiroyli matnga o'giramiz
-            if applicant_exists.age_medium == '30_plus':
-                context.user_data['average_age'] = '30 yoshdan katta'
-            else:
-                context.user_data['average_age'] = '30 yoshdan kichik'
-            
-            await update.message.reply_text(
-                "✍️ Iltimos, yangi arizangiz yoki murojaatingiz matnini batafsil yozib yuboring:",
-                reply_markup=ReplyKeyboardRemove()
-            )
-            return StepAplications.TEXT
+        try:
+            await user_contact_service(user_id=telegram_id, phone_number=phone_number)
+        except Exception:
+            pass # Agar bu xizmat majburiy bo'lmasa yoki xato bersa zanjir uzilib qolmasligi uchun
+
+        await update.message.reply_text(
+            # f"✅ Raqamingiz tasdiqlandi: {phone_number}\n\n"
+            f"📝 Tizimda topilmadingiz. Iltimos, arizani boshlash uchun familiyangiz, ismingizni to‘liq kiriting:",
+            reply_markup=ReplyKeyboardRemove()
+        )
+        # Ism-familiya so'rash bosqichiga o'tkazamiz
+        return StepAplications.FULL_NAME

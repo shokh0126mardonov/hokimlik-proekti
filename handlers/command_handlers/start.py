@@ -28,7 +28,7 @@ async def start_bot(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
     else:
         await update.message.reply_text(
-            f"👋 <b>Assalomu alaykum, {full_name}!</b>\n\n contactingizni yuboring",
+            f"👋 <b>Assalomu alaykum, {full_name}!</b>\n\n Telefon raqam yuboring",
             parse_mode="HTML",
             reply_markup=send_contact_keyboard(),
         )
