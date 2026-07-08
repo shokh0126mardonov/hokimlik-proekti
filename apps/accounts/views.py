@@ -270,8 +270,11 @@ class ApplicantViewSets(
         return ApplicantSerializer
 
     def get_queryset(self):
+        # Parametrni faqat string ekanligiga ishonch hosil qilib olamiz
         age_filter = self.request.query_params.get('age_filter', None)
         
+        # Agarda filter query_params ichidan kelayotgan boshqa maydon bo'lsa, 
+        # uni stringga o'giring, hech qachon obyekt ketib qolmasin.
         if age_filter in ['30_plus', '30_minus']:
             return Applicant.objects.filter(age_medium=age_filter)
             

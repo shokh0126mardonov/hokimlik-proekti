@@ -68,7 +68,7 @@ class User(AbstractUser):
         ]
 
 import uuid
-
+import re
 def generate_app_number():
     return f"APP-{uuid.uuid4().hex[:8].upper()}"
 
@@ -103,3 +103,24 @@ class Applicant(models.Model):
 
     def __str__(self):
         return self.full_name
+    
+    class Meta:
+        ordering = ['-id']
+
+    def save(self, *args, **kwargs):
+        # Agar telefon maydoniga tasodifan string emas, Telegram Contact obyekti kelib qolsa
+        if self.phone and not isinstance(self.phone, str):
+            # Agar uning ichida phone_number maydoni bo'lsa, o'shani ajratib olamiz
+            if hasattr(self.phone, 'phone_number'):
+                self.phone = str(self.phone.phone_number)
+            else:
+                self.phone = str(self.phone)
+                
+        # Raqam ichidagi faqat raqamlarni qoldiramiz (agar obyektdan stringga o'tganda ortiqcha belgilar bo'lsa)
+        if isinstance(self.phone, str):
+            # Faqat raqamlar va + belgisini qoldirish
+            cleaned_phone = re.sub(r'[^\d+]', '', self.phone)
+            # Agar + belgisi bo'lmasa va 998 bilan boshlanmasa, to'g'rilash (ixtiyoriy)
+            self.phone = cleaned_phone
+
+        super().save(*args, **kwargs)
