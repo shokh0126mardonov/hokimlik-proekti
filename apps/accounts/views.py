@@ -237,6 +237,7 @@ from asgiref.sync import async_to_sync # Asinxron botni sinxron kodda ishlatish 
 from handlers.service.ogohlantirish import send_response_to_telegram
 from .models import Applicant
 from .serializers import ApplicantSerializer, ApplicantResponseUpdateSerializer
+from .permissions import Is_SuperAdmin
 
 @extend_schema_view(
     list=extend_schema(
@@ -252,7 +253,6 @@ from .serializers import ApplicantSerializer, ApplicantResponseUpdateSerializer
         ]
     )
 )
-
 class ApplicantViewSets(
     mixins.ListModelMixin,      
     mixins.RetrieveModelMixin,  
@@ -262,7 +262,7 @@ class ApplicantViewSets(
     
     queryset = Applicant.objects.all()
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated,Is_SuperAdmin]
 
     def get_serializer_class(self):
         if self.action in ['update', 'partial_update']:
