@@ -25,7 +25,7 @@ class Application(models.Model):
         MEDIUM = "medium", "Medium"
         URGENT = "urgent", "Urgent"
 
-    telegram_id = models.BigIntegerField(null=True,blank=True)
+    # telegram_id = models.BigIntegerField(null=True,blank=True)
     app_number = models.CharField(
         max_length=30, 
         unique=True, 
@@ -33,11 +33,11 @@ class Application(models.Model):
         verbose_name="Ariza raqami"
     )
 
-    age_medium = models.CharField(
-        max_length=20,
-        choices=AgeAverage.choices,
-        default=AgeAverage.UTTIZDAN_KICHIK
-    )
+    # age_medium = models.CharField(
+    #     max_length=20,
+    #     choices=AgeAverage.choices,
+    #     default=AgeAverage.UTTIZDAN_KICHIK
+    # )
 
     service = models.ForeignKey(
         "references.Service",

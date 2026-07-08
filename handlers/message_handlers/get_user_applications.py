@@ -5,7 +5,7 @@ from asgiref.sync import sync_to_async
 from handlers.utils import StepAplications
 from apps.applications.models import Application
 from apps.references.models import Mahalla
-
+from apps.accounts.models import Applicant
 
 async def get_full_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Foydalanuvchi ismini saqlaydi va bazadan mahallalar ro'yxatini chiqaradi"""
@@ -84,59 +84,57 @@ async def get_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     return StepAplications.CONFIRM
 
-
 async def confirm_application(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Ariza tasdiqlansa bazaga saqlaydi, aks holda bekor qiladi"""
+    """Ariza tasdiqlansa ma'lumotlarni yangi Applicant modeliga saqlaydi"""
     answer = update.message.text
     
     if answer == 'Tasdiqlayman':
-        # user_data ichidan bot yig'gan barcha ma'lumotlarni olamiz
+        # 1. user_data ichidan bot yig'gan barcha ma'lumotlarni olamiz
         full_name = context.user_data.get('full_name')
         mahalla_name = context.user_data.get('mahalla')
         age_text = context.user_data.get('average_age')
         text_content = context.user_data.get('text')
         
-        # get_contact qadamida olingan kontakt obyekti
+        # Foydalanuvchining telegram_id si va kontakt obyekti
+        telegram_id = update.message.from_user.id
         contact_obj = context.user_data.get('contact')
         phone_number = contact_obj.phone_number if contact_obj else None
 
-        # Yosh toifasini model variantlariga moslaymiz ('30_plus' yoki '30_minus')
         age_medium = '30_plus' if 'katta' in str(age_text) else '30_minus'
 
-        # Django ORM so'rovini asinxron bajarish uchun ichki funksiya
+        # 3. Django ORM so'rovini asinxron bajarish uchun ichki funksiya
         @sync_to_async
-        def save_application():
-            # Tanlangan nom bo'yicha mahalla obyektini topamiz
+        def save_applicant_data():
             mahalla_obj = Mahalla.objects.filter(name=mahalla_name).first()
             
-            # Modelga ma'lumotlarni yozamiz
-            app = Application.objects.create(
-                telegram_id = update.effective_user.id,
-                citizen_name=full_name,
-                citizen_phone=phone_number,
+            applicant = Applicant.objects.create(
+                telegram_id=telegram_id,
+                full_name=full_name,
+                phone=phone_number,
                 mahalla=mahalla_obj,
                 age_medium=age_medium,
-                content=text_content,
-                status=Application.Status.NEW,
-                priority=Application.Priority.LOW,
+                text=text_content
             )
-            return app.app_number
+            return applicant
 
         try:
-            # Arizani bazaga saqlaymiz va avtomatik yaratilgan raqamini olamiz
-            app_number = await save_application()
+            new_applicant = await save_applicant_data()
+            
+            app_id = getattr(new_applicant, 'app_number', new_applicant.id)
             
             await update.message.reply_text(
-                f"✅ Arizangiz muvaffaqiyatli qabul qilindi!\n"
-                f"🗂 Ariza raqami: {app_number}",
-                reply_markup=ReplyKeyboardRemove()
+                f"✅ Arizangiz muvaffaqiyatli qabul qilindi!\n\n"
+                f"🔢 **Ariza raqamingiz:** #{app_id}\n"
+                f"⏳ Arizangiz ko'rib chiqilgach, shu bot orqali sizga javob xati yuboriladi.",
+                reply_markup=ReplyKeyboardRemove(),
+                parse_mode="Markdown" # Raqamni qalin (bold) ko'rsatish uchun
             )
         except Exception as e:
             await update.message.reply_text(
                 "❌ Arizani saqlashda texnik xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.",
                 reply_markup=ReplyKeyboardRemove()
             )
-            print(f"Ariza saqlashda xato: {e}")
+            print(f"Applicant saqlashda xato: {e}")
             
     else:
         await update.message.reply_text(
@@ -147,8 +145,6 @@ async def confirm_application(update: Update, context: ContextTypes.DEFAULT_TYPE
     # Jarayon tugagach vaqtinchalik ma'lumotlarni o'chiramiz
     context.user_data.clear()
     return ConversationHandler.END
-
-
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Foydalanuvchi jarayonni bekor qilganda ishlaydi"""
     await update.message.reply_text(

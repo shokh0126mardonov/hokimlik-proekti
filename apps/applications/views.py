@@ -33,8 +33,6 @@ from .permission import (
     AttachmentGetPermissions,
 )
 from django_filters.rest_framework import DjangoFilterBackend
-from drf_spectacular.utils import extend_schema, OpenApiParameter
-from drf_spectacular.types import OpenApiTypes
 from .pagination import CustomPagination
 from handlers.service.ogohlantirish import bot_send_message
 from .services import get_dashboard_summary
@@ -47,21 +45,16 @@ class ApplicationViewSets(AuditMixin, ModelViewSet):
     authentication_classes = [JWTAuthentication]
     pagination_class = CustomPagination
 
-    filter_backends = [DjangoFilterBackend]
-    filterset_class = ApplicationFilter
+    # filter_backends = [DjangoFilterBackend]
+    # filterset_class = ApplicationFilter
     
-    def get_queryset(self):
-        # 1. So'rovdan parametrni tekshiramiz
-        age_filter = self.request.query_params.get('age_filter', None)
+    # def get_queryset(self):
+    #     age_filter = self.request.query_params.get('age_filter', None)
         
-        # 2. Agar parametr kutilgan qiymat bo'lsa, asosiy querysetni qaytaramiz
-        # Keyinchalik DjangoFilterBackend buni o'zi avtomatik zanjirda davom ettiradi
-        if age_filter in ['30_plus', '30_minus']:
-            return super().get_queryset()
+    #     if age_filter in ['30_plus', '30_minus']:
+    #         return super().get_queryset()
             
-        # 3. Agar parametr berilmagan bo'lsa yoki noto'g'ri bo'lsa, 
-        # Filtr backendiga yetib bormasidanoq BO'SH QUERYSET qaytaramiz
-        return Application.objects.none()
+    #     return Application.objects.none()
 
     @action(detail=True, methods=["get"], url_path="attachments-to-pdf")
     def attachments_to_pdf(self, request, pk=None):
@@ -224,7 +217,6 @@ class AplicationStatus(AuditMixin, ModelViewSet):
         aplication.status = "closed"
         aplication.closed_at = timezone.now()
         aplication.save(update_fields=["status", "closed_at"])
-
         return Response({"status": "ok"})
 
     @action(detail=True, methods=["post"], url_path="reopen")

@@ -67,12 +67,18 @@ class User(AbstractUser):
             )
         ]
 
+import uuid
+
+def generate_app_number():
+    return f"APP-{uuid.uuid4().hex[:8].upper()}"
 
 class Applicant(models.Model):
     class AgeAverage(models.TextChoices):
         UTTIZDAN_KATTA = '30_plus', '30 yoshdan katta'
         UTTIZDAN_KICHIK = '30_minus', '30 yoshdan kichik'
 
+    app_number = models.CharField(default=generate_app_number)
+    telegram_id = models.BigIntegerField()
     age_medium = models.CharField(
         max_length=20,
         choices=AgeAverage.choices,
@@ -83,9 +89,8 @@ class Applicant(models.Model):
         max_length=128
     )
 
-    phone = PhoneNumberField(unique=True)
+    phone = PhoneNumberField()
     
-    # Agar bitta mahalladan ko'plab arizachilar bo'lishi mumkin bo'lsa, unique=True olib tashlanadi
     mahalla = models.ForeignKey(
         'references.Mahalla',
         on_delete=models.SET_NULL,
@@ -93,6 +98,7 @@ class Applicant(models.Model):
         blank=True
     )
 
+    response = models.TextField()
     text = models.TextField()
 
     def __str__(self):

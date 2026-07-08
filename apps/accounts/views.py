@@ -226,3 +226,75 @@ class ImportOqsoqolView(APIView):
             },
             status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
         )
+
+from rest_framework import viewsets, mixins
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from drf_spectacular.utils import extend_schema_view, extend_schema, OpenApiParameter
+from drf_spectacular.types import OpenApiTypes
+from asgiref.sync import async_to_sync # Asinxron botni sinxron kodda ishlatish uchun
+
+from handlers.service.ogohlantirish import send_response_to_telegram
+from .models import Applicant
+from .serializers import ApplicantSerializer, ApplicantResponseUpdateSerializer
+
+@extend_schema_view(
+    list=extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='age_filter',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                required=False,
+                description="Yosh toifasi bo'yicha filtrlash. Faqat '30_plus' yoki '30_minus' qabul qilinadi.",
+                enum=['30_plus', '30_minus'] # Swaggerda dropdown (tanlov) chiqaradi
+            )
+        ]
+    )
+)
+
+class ApplicantViewSets(
+    mixins.ListModelMixin,      
+    mixins.RetrieveModelMixin,  
+    mixins.UpdateModelMixin,    
+    viewsets.GenericViewSet
+):
+    
+    queryset = Applicant.objects.all()
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get_serializer_class(self):
+        if self.action in ['update', 'partial_update']:
+            return ApplicantResponseUpdateSerializer
+        return ApplicantSerializer
+
+    def get_queryset(self):
+        age_filter = self.request.query_params.get('age_filter', None)
+        
+        if age_filter in ['30_plus', '30_minus']:
+            return Applicant.objects.filter(age_medium=age_filter)
+            
+        return Applicant.objects.all()
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        
+        # 1. Xodim yozgan javobni (response fieldini) bazaga saqlaymiz
+        updated_applicant = serializer.save()
+        
+        try:
+            async_to_sync(send_response_to_telegram)(updated_applicant)
+        except Exception as e:
+            print(f"Telegram bot xabar yuborishda xatolik yuz berdi: {e}")
+        
+        # 3. Telegramga xabar ketgach (yoki urinib ko'rilgach), xodimga muvaffaqiyatli javob qaytadi
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def partial_update(self, request, *args, **kwargs):
+        kwargs['partial'] = True
+        return self.update(request, *args, **kwargs)

@@ -10,8 +10,8 @@ from .models import Application, Attachment, MahallaReport
 class AplicationSerializers(serializers.ModelSerializer):
     class Meta:
         model = Application
-        # fields = "__all__"
-        exclude = ['telegram_id']
+        fields = "__all__"
+        # exclude = ['telegram_id']
 
 
 class SendMahallaSerialisers(serializers.Serializer):

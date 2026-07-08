@@ -59,6 +59,6 @@ async def get_contact(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=ReplyKeyboardRemove(),
         )
     else:
-        await update.message.reply_text("Full-name yuboring.")
+        await update.message.reply_text("📝 Iltimos, familiyangiz, ismingizni to‘liq kiriting.")
 
         return StepAplications.FULL_NAME

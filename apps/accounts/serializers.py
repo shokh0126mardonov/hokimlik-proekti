@@ -63,3 +63,51 @@ class RegisterSerializers(serializers.ModelSerializer):
 
 class OqsoqolAddSerializers(serializers.Serializer):
     file = serializers.FileField()
+
+
+from rest_framework import serializers
+from .models import Applicant
+# Agar Mahalla serializerini ham chiqarmoqchi bo'lsangiz:
+# from apps.references.serializers import MahallaSerializer 
+
+class ApplicantSerializer(serializers.ModelSerializer):
+    mahalla_name = serializers.CharField(source='mahalla.name', read_only=True)
+    
+    age_medium_display = serializers.CharField(source='get_age_medium_display', read_only=True)
+
+    class Meta:
+        model = Applicant
+        fields = [
+            'id', 
+            'full_name', 
+            'phone', 
+            'age_medium', 
+            'age_medium_display',
+            'mahalla', 
+            'mahalla_name', 
+            'text', 
+            'response'
+        ]
+        
+        extra_kwargs = {
+            'response': {'required': False, 'allow_blank': True}
+        }
+
+from rest_framework import serializers
+from .models import Applicant
+
+class ApplicantSerializer(serializers.ModelSerializer):
+    """Faqat ma'lumotlarni o'qish (GET) uchun serializer"""
+    mahalla_name = serializers.CharField(source='mahalla.name', read_only=True)
+    age_medium_display = serializers.CharField(source='get_age_medium_display', read_only=True)
+
+    class Meta:
+        model = Applicant
+        fields = ['id', 'full_name', 'phone', 'age_medium', 'age_medium_display', 'mahalla', 'mahalla_name', 'text', 'response']
+
+
+class ApplicantResponseUpdateSerializer(serializers.ModelSerializer):
+    """Faqat 'response' fieldiga yozish (PATCH/PUT) uchun serializer"""
+    class Meta:
+        model = Applicant
+        fields = ['response'] # Faqat shu maydon Swaggerda ochiladi, qolganlari yopiladi
